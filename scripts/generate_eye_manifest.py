@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import argparse
+import configparser
 import json
 import sys
 from pathlib import Path
@@ -18,19 +19,38 @@ def load_existing_manifest(manifest_path: Path) -> Optional[Dict[str, Any]]:
     if not manifest_path.exists():
         return None
     
-    with open(manifest_path, 'r') as f:
-        manifest = json.load(f)
+    config = configparser.ConfigParser()
+    config.read(manifest_path)
     
-    # Check version
-    if manifest.get("manifest_version") != VERSION:
-        raise ValueError(f"Manifest version {manifest.get('manifest_version')} doesn't match script version {VERSION}")
+    manifest = {}
     
-    return manifest
+    # Parse each section (actor/character)
+    for actor in config.sections():
+        if config.has_option(actor, "clips"):
+            clips_str = config.get(actor, "clips")
+            try:
+                # Parse the JSON array string
+                clips_list = json.loads(clips_str)
+                manifest[actor] = clips_list
+            except json.JSONDecodeError as e:
+                raise ValueError(f"Invalid JSON in clips for actor '{actor}': {e}")
+    
+    return manifest if manifest else None
 
 def save_manifest(manifest: Dict[str, Any], manifest_path: Path) -> None:
-    """Save manifest to JSON file."""
+    """Save manifest to ConfigFile (.cfg) format."""
+    config = configparser.ConfigParser()
+    
+    # Create a section for each actor
+    for actor in sorted(manifest.keys()):
+        config.add_section(actor)
+        
+        # Serialize clips as a JSON array string
+        clips_json = json.dumps(manifest[actor], indent=2, separators=(', ', ': '))
+        config.set(actor, "clips", clips_json)
+    
     with open(manifest_path, 'w') as f:
-        json.dump(manifest, f, indent=2)
+        config.write(f)
 
 def generate_manifest(clip_dir: str, manifest_file_output: str) -> Tuple[bool, str]:
     """
@@ -52,10 +72,7 @@ def generate_manifest(clip_dir: str, manifest_file_output: str) -> Tuple[bool, s
         manifest = existing_manifest
     else:
         # Create new manifest
-        manifest = {
-            "manifest_version": VERSION,
-            "characters": {}
-        }
+        manifest = {}
     
     # Process each character directory
     for char_dir in sorted(clip_dir_path.iterdir()):
@@ -69,10 +86,10 @@ def generate_manifest(clip_dir: str, manifest_file_output: str) -> Tuple[bool, s
             continue
         
         # Initialize character in manifest if not present
-        if char_name not in manifest["characters"]:
-            manifest["characters"][char_name] = []
+        if char_name not in manifest:
+            manifest[char_name] = []
         
-        existing_entries = manifest["characters"][char_name]
+        existing_entries = manifest[char_name]
         
         # Build new entry list by iterating through clips in alphabetic order
         new_entries = []
@@ -83,7 +100,7 @@ def generate_manifest(clip_dir: str, manifest_file_output: str) -> Tuple[bool, s
             # Check if this file already exists in manifest
             existing_entry = None
             for entry in existing_entries:
-                if entry["file"] == file_path:
+                if entry.get("path") == file_path:
                     existing_entry = entry
                     break
             
@@ -92,14 +109,14 @@ def generate_manifest(clip_dir: str, manifest_file_output: str) -> Tuple[bool, s
                 new_entries.append(existing_entry)
             else:
                 # Create new entry with calculated values based on position
-                angle, aggro = 0, 0
+                angle, aggrivation = 0, 0
                 new_entries.append({
-                    "file": file_path,
-                    "aggrivation": aggro,
-                    "angle": angle
+                    "path": file_path,
+                    "angle": angle,
+                    "aggrivation": aggrivation
                 })
         
-        manifest["characters"][char_name] = new_entries
+        manifest[char_name] = new_entries
     
     save_manifest(manifest, manifest_path)
     
@@ -108,13 +125,13 @@ def generate_manifest(clip_dir: str, manifest_file_output: str) -> Tuple[bool, s
 def main():
     parser = argparse.ArgumentParser(
         prog="generate_eye_manifest.py",
-        description="Generate or update an eye animation manifest for character clips.",
+        description="Generate or update an eye animation manifest for character clips (Godot ConfigFile format).",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
-  %(prog)s                           # Use current directory and create eye_manifest.json
-  %(prog)s ./clips                   # Use ./clips directory and create eye_manifest.json
-  %(prog)s ./clips my_manifest.json  # Use ./clips and save to my_manifest.json
+  %(prog)s                           # Use current directory and create eye_manifest.cfg
+  %(prog)s ./clips                   # Use ./clips directory and create eye_manifest.cfg
+  %(prog)s ./clips my_manifest.cfg   # Use ./clips and save to my_manifest.cfg
         """
     )
     
@@ -128,8 +145,8 @@ Examples:
     parser.add_argument(
         "manifest_file",
         nargs="?",
-        default="eye_manifest.json",
-        help="Output manifest file path (default: eye_manifest.json)"
+        default="eye_manifest.cfg",
+        help="Output manifest file path (default: eye_manifest.cfg)"
     )
     
     parser.add_argument(
