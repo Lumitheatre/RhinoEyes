@@ -104,17 +104,14 @@ def generate_manifest(clip_dir: str, manifest_file_output: str) -> Tuple[bool, s
                     existing_entry = entry
                     break
             
-            if existing_entry is not None:
-                # Preserve existing entry without modification
-                new_entries.append(existing_entry)
-            else:
-                # Create new entry with calculated values based on position
-                angle, aggrivation = 0, 0
-                new_entries.append({
-                    "path": file_path,
-                    "angle": angle,
-                    "aggrivation": aggrivation
-                })
+            angle, aggravation = 0, 0
+            new_entries.append({
+                "enabled": existing_entry.get("enabled", "true") if existing_entry else "true",
+                "path": file_path,
+                "angle": existing_entry.get("angle", angle) if existing_entry else angle,
+                "aggravation": existing_entry.get("aggravation", aggravation) if existing_entry else aggravation
+
+            })
         
         manifest[char_name] = new_entries
     

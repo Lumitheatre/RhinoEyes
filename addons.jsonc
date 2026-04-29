@@ -1,0 +1,18 @@
+// Godot addons configuration file for use with the GodotEnv tool.
+// See https://github.com/chickensoft-games/GodotEnv for more info.
+// -------------------------------------------------------------------- //
+// Note: this is a JSONC file, so you can use comments!
+// If using Rider, see https://youtrack.jetbrains.com/issue/RIDER-41716
+// for any issues with JSONC.
+// -------------------------------------------------------------------- //
+{
+  // "path": "addons", // default
+  // "cache": ".addons", // default
+  "addons": {
+    "ffmpeg": {
+      "url": "https://github.com/EIRTeam/EIRTeam.FFmpeg/releases/download/autobuild-2025-11-12-13-44/eirteam-ffmpeg-1.1.4.zip",
+      "source": "zip",
+      "subfolder": "addons/ffmpeg"
+    }
+  }
+}

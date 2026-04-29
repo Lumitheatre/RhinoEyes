@@ -20,15 +20,18 @@ func get_actor_list() -> String:
 	if actor_names.is_empty(): _load_manifest()
 	return ",".join(actor_names)
 
-func find_clip(actor_name: String, angle: float, aggression: int) -> String:
+func get_clip_resource(actor_name: String, angle: float, aggravation: int) -> String:
 	var clips = config.get_value(actor_name, "clips", [])
 	var best_path: String = ""
 	var min_diff: float = 181.0
-
+	
 	for clip in clips:
-		if int(clip["aggression"]) == aggression:
+		if clip["enabled"] == "true" and int(clip["aggravation"]) == aggravation:
 			var diff = abs(fmod(clip["angle"] - angle + 180, 360) - 180)
 			if diff < min_diff:
 				min_diff = diff
 				best_path = clip["path"]
+	
+	print_debug("Found clip for %s (Angle: %.2f, Aggravation: %d): %s" % [actor_name, angle, aggravation, best_path])
+
 	return best_path
