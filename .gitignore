@@ -18,3 +18,7 @@ mono_crash.*.json
 
 *.mp4
 assets/eyes/v1
+
+# Godot 4+ specific ignores
+.godot/
+/android/
