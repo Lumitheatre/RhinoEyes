@@ -96,6 +96,157 @@ def create_entry(path: str) -> dict:
     """
     return {"path": path}
 
+def get_sheet_capacity(manifest: configparser.ConfigParser, sheet_id: str) -> int:
+    """
+    Calculate the capacity of a sheet based on its grid dimensions.
+    
+    Args:
+        manifest: The manifest config
+        sheet_id: The sheet identifier (e.g., "1" from "sheet:1")
+    
+    Returns:
+        The total capacity (width * height) or 0 if grid not found
+    """
+    sheet_section = f"{SHEET_NS}:{sheet_id}"
+    if not manifest.has_section(sheet_section):
+        return 0
+    
+    if not manifest.has_option(sheet_section, "grid"):
+        return 0
+    
+    grid_str = manifest.get(sheet_section, "grid")
+    try:
+        # Parse grid format "WxH" (e.g., "8x8")
+        parts = grid_str.strip('"').split("x")
+        if len(parts) == 2:
+            width = int(parts[0])
+            height = int(parts[1])
+            return width * height
+    except (ValueError, AttributeError):
+        pass
+    
+    return 0
+
+def get_sheet_usage(manifest: configparser.ConfigParser, sheet_id: str) -> int:
+    """
+    Count how many clips are currently assigned to a sheet.
+    
+    Args:
+        manifest: The manifest config
+        sheet_id: The sheet identifier
+    
+    Returns:
+        The number of clips assigned to this sheet
+    """
+    count = 0
+    for section in manifest.sections():
+        if section.startswith(f"{ACTOR_NS}:"):
+            if manifest.has_option(section, "clips"):
+                clips_str = manifest.get(section, "clips")
+                try:
+                    clips = json.loads(clips_str)
+                    for clip in clips:
+                        if clip.get("sheet_id") == sheet_id:
+                            count += 1
+                except json.JSONDecodeError:
+                    pass
+    return count
+
+def allocate_clips_to_sheets(manifest: configparser.ConfigParser, clear_existing: bool = False) -> None:
+    """
+    Allocate clips to sheets based on available capacity.
+    
+    Sequentially assigns sheet_id and sheet_slot to clips (0-based index from top-left to bottom-right).
+    Clips are assigned to sheets based on available capacity.
+    
+    Args:
+        manifest: The manifest config to modify in place
+        clear_existing: If True, clears all existing sheet_id and sheet_slot assignments before reallocation (destructive).
+                       If False, preserves existing assignments and only assigns unassigned clips.
+    
+    Unassigned clips (no sheet_id) indicate insufficient capacity.
+    """
+    # Get list of sheets
+    sheets = []
+    for section in manifest.sections():
+        if section.startswith(f"{SHEET_NS}:"):
+            sheet_id = section[len(f"{SHEET_NS}:"):]
+            sheets.append(sheet_id)
+    
+    if not sheets:
+        operation = "reallocation" if clear_existing else "allocation"
+        print(f"Warning: No sheets found in manifest. Skipping clip {operation}.")
+        return
+    
+    sheets.sort()
+    
+    # Initialize sheet capacity
+    sheet_capacity = {sheet_id: get_sheet_capacity(manifest, sheet_id) for sheet_id in sheets}
+    
+    # Initialize sheet usage and slot tracking
+    sheet_usage = {sheet_id: 0 for sheet_id in sheets}
+    sheet_slot = {sheet_id: 0 for sheet_id in sheets}
+    
+    # If not clearing, count existing assignments
+    if not clear_existing:
+        for section in manifest.sections():
+            if section.startswith(f"{ACTOR_NS}:"):
+                if manifest.has_option(section, "clips"):
+                    clips_str = manifest.get(section, "clips")
+                    try:
+                        clips = json.loads(clips_str)
+                        for clip in clips:
+                            if "sheet_id" in clip:
+                                sheet_usage[clip["sheet_id"]] += 1
+                    except json.JSONDecodeError:
+                        pass
+    
+    operation = "Reallocating" if clear_existing else "Allocating"
+    print(f"{operation} clips to {len(sheets)} sheet(s):")
+    for sheet_id in sheets:
+        cap_str = f"/{sheet_capacity[sheet_id]}" if clear_existing else f"/{sheet_capacity[sheet_id]} capacity"
+        print(f"  Sheet {sheet_id}: {sheet_usage[sheet_id]}{cap_str}")
+    
+    # Process each actor's clips
+    for section in manifest.sections():
+        if section.startswith(f"{ACTOR_NS}:"):
+            if manifest.has_option(section, "clips"):
+                clips_str = manifest.get(section, "clips")
+                try:
+                    clips = json.loads(clips_str)
+                    
+                    # Allocate each clip to a sheet
+                    for clip in clips:
+                        # If clearing, remove existing assignments
+                        if clear_existing:
+                            if "sheet_id" in clip:
+                                del clip["sheet_id"]
+                            if "sheet_slot" in clip:
+                                del clip["sheet_slot"]
+                        
+                        # Skip if already assigned (when not clearing)
+                        if not clear_existing and "sheet_id" in clip:
+                            continue
+                        
+                        # Find first sheet with available capacity
+                        assigned = False
+                        for sheet_id in sheets:
+                            if sheet_usage[sheet_id] < sheet_capacity[sheet_id]:
+                                clip["sheet_id"] = sheet_id
+                                clip["sheet_slot"] = sheet_slot[sheet_id]
+                                sheet_usage[sheet_id] += 1
+                                sheet_slot[sheet_id] += 1
+                                assigned = True
+                                break
+                        
+                        if not assigned:
+                            # No space available, leave unassigned
+                            pass
+                    
+                    manifest.set(section, "clips", json.dumps(clips, indent=2, separators=(', ', ': ')))
+                except json.JSONDecodeError:
+                    pass
+
 def get_max_uid(manifest: configparser.ConfigParser) -> int:
     """Get the maximum UID currently in the manifest, or -1 if none exist."""
     max_uid = 0
@@ -344,6 +495,8 @@ Examples:
   %(prog)s -u ./clips eye_manifest.cfg               # Generate/update from clips
   %(prog)s -u ./clips -d eye_manifest.cfg            # Generate/update from clips and delete missing files
   %(prog)s --migrate old_manifest.cfg                # Migrate old manifest format to new namespace format
+  %(prog)s --allocate-clips-to-sheets eye_manifest.cfg  # Allocate clips to sheets based on capacity
+  %(prog)s --reallocate-clips-to-sheets eye_manifest.cfg # Destructively reallocate all clips to sheets
         """
     )
     
@@ -372,6 +525,20 @@ Examples:
         action="store_true",
         help="Migrate old manifest format (without namespace prefixes) to new namespace format. "
              "Required when loading manifests with version mismatch."
+    )
+    
+    parser.add_argument(
+        "--allocate-clips-to-sheets",
+        action="store_true",
+        help="Allocate clips to sheets based on available capacity (grid dimensions). "
+             "Sequentially assigns sheet_id to unassigned clips."
+    )
+    
+    parser.add_argument(
+        "--reallocate-clips-to-sheets",
+        action="store_true",
+        help="Destructively clear all clip-to-sheet assignments and reallocate from scratch. "
+             "All existing sheet_id values will be removed and reassigned."
     )
 
     args = parser.parse_args()
@@ -402,6 +569,17 @@ Examples:
             # Also apply normal update operations
             result_path = update_manifest(manifest_path)
             print(f"Updated manifest: {result_path}")
+            return
+        
+        if args.allocate_clips_to_sheets or args.reallocate_clips_to_sheets:
+            # Allocate clips to sheets (non-destructive)
+            manifest = load_manifest(manifest_path)
+            if manifest is None:
+                raise ValueError(f"Manifest file '{manifest_path}' does not exist.")
+            
+            allocate_clips_to_sheets(manifest, clear_existing=args.reallocate_clips_to_sheets)
+            save_manifest(manifest, manifest_path)
+            print(f"Allocated clips to sheets: {manifest_path}")
             return
         
         # Normal update operation
