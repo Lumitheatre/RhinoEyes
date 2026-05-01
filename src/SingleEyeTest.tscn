@@ -13,5 +13,5 @@ mesh = SubResource("PlaneMesh_njher")
 script = ExtResource("1_3cvyl")
 manifest = ExtResource("2_epenf")
 character_name = "Alisa"
-look_angle = 175.939
+look_angle = 83.368
 aggravation = 1

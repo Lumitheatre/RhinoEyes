@@ -7,11 +7,11 @@ import sys
 from pathlib import Path
 from typing import Dict, List, Any, Optional, Tuple
 
-VERSION = "0.1.0"
+VERSION = "0.1.1"
 
 def get_clips_for_character(char_dir: Path) -> List[str]:
-    """Get sorted list of MP4 clips in character directory."""
-    clips = sorted([f.name for f in char_dir.glob("*.mp4")])
+    """Get sorted list of clips in character directory."""
+    clips = sorted([f.name for f in char_dir.glob("*.mov")])
     return clips
 
 def load_existing_manifest(manifest_path: Path) -> Optional[Dict[str, Any]]:
@@ -41,6 +41,8 @@ def save_manifest(manifest: Dict[str, Any], manifest_path: Path) -> None:
     """Save manifest to ConfigFile (.cfg) format."""
     config = configparser.ConfigParser()
     
+    config.set('DEFAULT', 'manifest_version', VERSION)
+    
     # Create a section for each actor
     for actor in sorted(manifest.keys()):
         config.add_section(actor)
@@ -52,9 +54,14 @@ def save_manifest(manifest: Dict[str, Any], manifest_path: Path) -> None:
     with open(manifest_path, 'w') as f:
         config.write(f)
 
-def generate_manifest(clip_dir: str, manifest_file_output: str) -> Tuple[bool, str]:
+def generate_manifest(clip_dir: str, manifest_file_output: str, delete_absent: bool = False) -> Tuple[bool, str]:
     """
     Generate or update eye manifest for all characters (idempotent).
+    
+    Args:
+        clip_dir: Directory containing character subdirectories
+        manifest_file_output: Output manifest file path
+        delete_absent: If True, remove entries for missing files when updating manifest
     
     Returns:
         Tuple of (is_new: bool, manifest_path: str)
@@ -74,6 +81,18 @@ def generate_manifest(clip_dir: str, manifest_file_output: str) -> Tuple[bool, s
         # Create new manifest
         manifest = {}
     
+    # If delete_absent flag is set, remove entries for missing files after processing
+    if delete_absent:
+        print("Deleting entries for missing files from existing manifest...")
+        for char_name in list(manifest.keys()):
+            manifest[char_name] = [
+                entry for entry in manifest[char_name]
+                if Path(entry.get("path", "")).exists()
+            ]
+            # Remove character entirely if no entries remain
+            if not manifest[char_name]:
+                del manifest[char_name]
+        
     # Process each character directory
     for char_dir in sorted(clip_dir_path.iterdir()):
         if not char_dir.is_dir():
@@ -95,7 +114,7 @@ def generate_manifest(clip_dir: str, manifest_file_output: str) -> Tuple[bool, s
         new_entries = []
         
         for _, clip_name in enumerate(clips):
-            file_path = f"res://{char_dir}/{clip_name}"
+            file_path = f"{char_dir}/{clip_name}"
             
             # Check if this file already exists in manifest
             existing_entry = None
@@ -113,6 +132,17 @@ def generate_manifest(clip_dir: str, manifest_file_output: str) -> Tuple[bool, s
 
             })
         
+        if not delete_absent:
+            # Add back any existing entries that reference missing files
+            for entry in existing_entries:
+                entry_path = entry.get("path", "")
+                # Check if this entry is not in the new list
+                if not any(e.get("path") == entry_path for e in new_entries):
+                    new_entries.append(entry)
+                    
+        # Sort new_entries by aggravation, then angle, then path
+        new_entries.sort(key=lambda x: (x.get("aggravation", 0), x.get("angle", 0), x.get("path", "")))
+
         manifest[char_name] = new_entries
     
     save_manifest(manifest, manifest_path)
@@ -136,7 +166,7 @@ Examples:
         "clip_dir",
         nargs="?",
         default=".",
-        help="Directory containing character subdirectories with MP4 clips (default: current directory)"
+        help="Directory containing character subdirectories with mov clips (default: current directory)"
     )
     
     parser.add_argument(
@@ -147,15 +177,15 @@ Examples:
     )
     
     parser.add_argument(
-        "--version",
-        action="version",
-        version=f"%(prog)s {VERSION}"
+        "-d", "--delete-absent",
+        action="store_true",
+        help="Remove entries from existing manifest if their referenced files are missing"
     )
-    
+
     args = parser.parse_args()
     
     try:
-        is_new, manifest_path = generate_manifest(args.clip_dir, args.manifest_file)
+        is_new, manifest_path = generate_manifest(args.clip_dir, args.manifest_file, args.delete_absent)
         status = "Created new" if is_new else "Updated existing"
         print(f"{status} manifest: {manifest_path}")
     except ValueError as e:
