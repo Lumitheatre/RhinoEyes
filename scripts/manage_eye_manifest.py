@@ -5,59 +5,85 @@ import configparser
 import json
 import sys
 from pathlib import Path
-from typing import Dict, List, Any, Optional, Tuple
+from typing import List, Optional, Tuple
 
 VERSION = "0.1.2"
+
+ACTOR_NS = "actor"
+MANIFEST_NS = "manifest"
+SHEET_NS = "sheet"
 
 def get_clips_for_character(char_dir: Path) -> List[str]:
     """Get sorted list of clips in character directory."""
     clips = sorted([f.name for f in char_dir.glob("*.mov")])
     return clips
 
-def load_manifest(manifest_path: Path) -> Optional[Dict[str, Any]]:
+def migrate_old_manifest(manifest: configparser.ConfigParser) -> configparser.ConfigParser:
+    """
+    Migrate old manifest format (sections = actor names) to new namespace format.
+    Also migrates version from DEFAULT section to manifest: section.
+    
+    Old format: [actor_name] with clips = [...], version in DEFAULT
+    New format: [actor:actor_name] with clips = [...], version in manifest:
+    
+    Modifies manifest in place and returns it.
+    """
+    new_manifest = configparser.ConfigParser()
+    
+    # Create manifest: section with version
+    manifest_section = f"{MANIFEST_NS}:"
+    new_manifest.add_section(manifest_section)
+    new_manifest.set(manifest_section, "version", VERSION)
+
+    # Parse each section - if it doesn't start with a namespace prefix, treat it as old-style actor
+    for section in manifest.sections():
+        if ":" not in section and section != "DEFAULT":
+            # Old format: actor name without namespace prefix
+            if manifest.has_option(section, "clips"):
+                new_section = f"{ACTOR_NS}:{section}"
+                new_manifest.add_section(new_section)
+                # Copy all options from old section to new section
+                for key in manifest[section]:
+                    new_manifest.set(new_section, key, manifest.get(section, key))
+    
+    return new_manifest
+
+def load_manifest(manifest_path: Path) -> Optional[configparser.ConfigParser]:
     """Load existing manifest, return None if doesn't exist."""
     if not manifest_path.exists():
         return None
     
-    config = configparser.ConfigParser()
-    config.read(manifest_path)
+    manifest = configparser.ConfigParser()
+    manifest.read(manifest_path)
 
-    if ("DEFAULT" not in config or config["DEFAULT"].get("manifest_version") != VERSION):
-        raise ValueError(f"Manifest file '{manifest_path}' is missing or has incompatible version. Expected version: {VERSION}")
+    # Check for version in manifest: section (new format)
+    manifest_section = f"{MANIFEST_NS}:"
+    if manifest.has_section(manifest_section) and manifest.has_option(manifest_section, "version"):
+        manifest_version = manifest.get(manifest_section, "version")
+    # Fall back to DEFAULT section (old format, will fail with migration prompt)
+    elif manifest.has_option("DEFAULT", "manifest_version"):
+        manifest_version = manifest.get("DEFAULT", "manifest_version")
+    else:
+        # No version found
+        return None
     
-    manifest = {}
+    if manifest_version != VERSION:
+        raise ValueError(f"Manifest version mismatch. File: {manifest_version}, Expected: {VERSION}. Use --migrate to convert old format.")
     
-    # Parse each section (actor/character)
-    for actor in config.sections():
-        if config.has_option(actor, "clips"):
-            clips_str = config.get(actor, "clips")
-            try:
-                # Parse the JSON array string
-                clips_list = json.loads(clips_str)
-                manifest[actor] = clips_list
-            except json.JSONDecodeError as e:
-                raise ValueError(f"Invalid JSON in clips for actor '{actor}': {e}")
-    
-    return manifest if manifest else None
+    return manifest
 
-def save_manifest(manifest: Dict[str, Any], manifest_path: Path) -> None:
-    """Save manifest to ConfigFile (.cfg) format."""
-    config = configparser.ConfigParser()
-    
-    config.set('DEFAULT', 'manifest_version', VERSION)
-    
-    # Create a section for each actor
-    for actor in sorted(manifest.keys()):
-        config.add_section(actor)
-        
-        # Serialize clips as a JSON array string
-        clips_json = json.dumps(manifest[actor], indent=2, separators=(', ', ': '))
-        config.set(actor, "clips", clips_json)
+def save_manifest(manifest: configparser.ConfigParser, manifest_path: Path) -> None:
+    """Save manifest to ConfigFile (.cfg) format with namespace structure."""
+    # Ensure manifest: section exists with version
+    manifest_section = f"{MANIFEST_NS}:"
+    if not manifest.has_section(manifest_section):
+        manifest.add_section(manifest_section)
+    manifest.set(manifest_section, "version", VERSION)
     
     with open(manifest_path, 'w') as f:
-        config.write(f)
+        manifest.write(f)
 
-def create_entry(path: str) -> Dict[str, Any]:
+def create_entry(path: str) -> dict:
     """
     Create a new entry with minimal required fields.
     Only the path is populated; other fields are left for management.
@@ -70,16 +96,25 @@ def create_entry(path: str) -> Dict[str, Any]:
     """
     return {"path": path}
 
-def get_max_uid(manifest: Dict[str, Any]) -> int:
+def get_max_uid(manifest: configparser.ConfigParser) -> int:
     """Get the maximum UID currently in the manifest, or -1 if none exist."""
     max_uid = 0
-    for character_clips in manifest.values():
-        for clip in character_clips:
-            if "uid" in clip:
-                max_uid = max(max_uid, clip["uid"])
+    
+    for section in manifest.sections():
+        if section.startswith(f"{ACTOR_NS}:"):
+            if manifest.has_option(section, "clips"):
+                clips_str = manifest.get(section, "clips")
+                try:
+                    clips = json.loads(clips_str)
+                    for clip in clips:
+                        if "uid" in clip:
+                            max_uid = max(max_uid, clip["uid"])
+                except json.JSONDecodeError:
+                    pass
+    
     return max_uid
 
-def assign_uids(manifest: Dict[str, Any]) -> None:
+def assign_uids(manifest: configparser.ConfigParser) -> None:
     """
     Assign UIDs to all entries that don't have one.
     Uses the maximum existing UID and increments from there.
@@ -88,35 +123,59 @@ def assign_uids(manifest: Dict[str, Any]) -> None:
     """
     next_uid = get_max_uid(manifest) + 1
     
-    for character_clips in manifest.values():
-        for entry in character_clips:
-            if "uid" not in entry:
-                entry["uid"] = next_uid
-                next_uid += 1
+    for section in manifest.sections():
+        if section.startswith(f"{ACTOR_NS}:"):
+            if manifest.has_option(section, "clips"):
+                clips_str = manifest.get(section, "clips")
+                try:
+                    clips = json.loads(clips_str)
+                    for entry in clips:
+                        if "uid" not in entry:
+                            entry["uid"] = next_uid
+                            next_uid += 1
+                    manifest.set(section, "clips", json.dumps(clips, indent=2, separators=(', ', ': ')))
+                except json.JSONDecodeError:
+                    pass
 
-def initialize_entry_fields(manifest: Dict[str, Any]) -> None:
+def initialize_entry_fields(manifest: configparser.ConfigParser) -> None:
     """
     Initialize missing fields in entries with default values.
     Ensures all entries have a consistent structure.
     
     Modifies manifest in place.
     """
-    for character_clips in manifest.values():
-        for entry in character_clips:
-            entry.setdefault("enabled", "true")
-            entry.setdefault("angle", 0)
-            entry.setdefault("aggravation", 0)
+    for section in manifest.sections():
+        if section.startswith(f"{ACTOR_NS}:"):
+            if manifest.has_option(section, "clips"):
+                clips_str = manifest.get(section, "clips")
+                try:
+                    clips = json.loads(clips_str)
+                    for entry in clips:
+                        entry.setdefault("enabled", "true")
+                        entry.setdefault("angle", 0)
+                        entry.setdefault("aggravation", 0)
+                    manifest.set(section, "clips", json.dumps(clips, indent=2, separators=(', ', ': ')))
+                except json.JSONDecodeError:
+                    pass
 
-def sort_entries(manifest: Dict[str, Any]) -> None:
+def sort_entries(manifest: configparser.ConfigParser) -> None:
     """
     Sort all entries by aggravation, then angle, then path.
     
     Modifies manifest in place.
     """
-    for character_clips in manifest.values():
-        character_clips.sort(key=lambda x: (x.get("aggravation", 0), x.get("angle", 0), x.get("path", "")))
+    for section in manifest.sections():
+        if section.startswith(f"{ACTOR_NS}:"):
+            if manifest.has_option(section, "clips"):
+                clips_str = manifest.get(section, "clips")
+                try:
+                    clips = json.loads(clips_str)
+                    clips.sort(key=lambda x: (x.get("aggravation", 0), x.get("angle", 0), x.get("path", "")))
+                    manifest.set(section, "clips", json.dumps(clips, indent=2, separators=(', ', ': ')))
+                except json.JSONDecodeError:
+                    pass
 
-def sync_manifest_from_clips(clip_dir: str, manifest: Dict[str, Any], delete_absent: bool = False) -> None:
+def sync_manifest_from_clips(clip_dir: str, manifest: configparser.ConfigParser, delete_absent: bool = False) -> None:
     """
     Synchronize manifest with clips found in clip_dir.
     
@@ -129,7 +188,7 @@ def sync_manifest_from_clips(clip_dir: str, manifest: Dict[str, Any], delete_abs
     
     Args:
         clip_dir: Directory containing character subdirectories with .mov clips
-        manifest: The manifest dict to synchronize
+        manifest: The manifest to synchronize
         delete_absent: If True, remove entries for files not found on disk
     """
     clip_dir_path = Path(clip_dir)
@@ -137,14 +196,22 @@ def sync_manifest_from_clips(clip_dir: str, manifest: Dict[str, Any], delete_abs
     # If delete_absent flag is set, remove entries for files not found on disk
     if delete_absent:
         print("Removing entries for files no longer present in clip directory...")
-        for char_name in list(manifest.keys()):
-            manifest[char_name] = [
-                entry for entry in manifest[char_name]
-                if Path(entry.get("path", "")).exists()
-            ]
-            # Remove character entirely if no entries remain
-            if not manifest[char_name]:
-                del manifest[char_name]
+        for section in list(manifest.sections()):
+            if section.startswith(f"{ACTOR_NS}:"):
+                if manifest.has_option(section, "clips"):
+                    clips_str = manifest.get(section, "clips")
+                    try:
+                        clips = json.loads(clips_str)
+                        clips[:] = [
+                            entry for entry in clips
+                            if Path(entry.get("path", "")).exists()
+                        ]
+                        if clips:
+                            manifest.set(section, "clips", json.dumps(clips, indent=2, separators=(', ', ': ')))
+                        else:
+                            manifest.remove_section(section)
+                    except json.JSONDecodeError:
+                        pass
     
     # Process each character directory
     for char_dir in sorted(clip_dir_path.iterdir()):
@@ -152,45 +219,56 @@ def sync_manifest_from_clips(clip_dir: str, manifest: Dict[str, Any], delete_abs
             continue
         
         char_name = char_dir.name
-        clips = get_clips_for_character(char_dir)
+        clips_list = get_clips_for_character(char_dir)
         
-        if not clips:
+        if not clips_list:
             continue
         
-        # Initialize character in manifest if not present
-        if char_name not in manifest:
-            manifest[char_name] = []
+        actor_section = f"{ACTOR_NS}:{char_name}"
         
-        existing_entries = manifest[char_name]
-        new_entries = []
+        # Load existing clips for this actor
+        existing_clips = []
+        if manifest.has_section(actor_section) and manifest.has_option(actor_section, "clips"):
+            clips_str = manifest.get(actor_section, "clips")
+            try:
+                existing_clips = json.loads(clips_str)
+            except json.JSONDecodeError:
+                existing_clips = []
+        
+        new_clips = []
         
         # Process each clip file
-        for clip_name in clips:
+        for clip_name in clips_list:
             file_path = f"{char_dir}/{clip_name}"
             
             # Check if this file already exists in manifest
             existing_entry = None
-            for entry in existing_entries:
+            for entry in existing_clips:
                 if entry.get("path") == file_path:
                     existing_entry = entry
                     break
             
             if existing_entry:
                 # Preserve existing entry
-                new_entries.append(existing_entry)
+                new_clips.append(existing_entry)
             else:
                 # Create new entry (just path, other fields added during management)
-                new_entries.append(create_entry(file_path))
+                new_clips.append(create_entry(file_path))
         
         if not delete_absent:
             # Add back any existing entries that reference missing files
-            for entry in existing_entries:
+            for entry in existing_clips:
                 entry_path = entry.get("path", "")
                 # Check if this entry is not in the new list
-                if not any(e.get("path") == entry_path for e in new_entries):
-                    new_entries.append(entry)
+                if not any(e.get("path") == entry_path for e in new_clips):
+                    new_clips.append(entry)
         
-        manifest[char_name] = new_entries
+        # Ensure section exists
+        if not manifest.has_section(actor_section):
+            manifest.add_section(actor_section)
+        
+        # Save updated clips
+        manifest.set(actor_section, "clips", json.dumps(new_clips, indent=2, separators=(', ', ': ')))
 
 def update_manifest_from_clips(clip_dir: str, manifest_path: Path, delete_absent: bool = False) -> Tuple[bool, str]:
     """
@@ -208,16 +286,24 @@ def update_manifest_from_clips(clip_dir: str, manifest_path: Path, delete_absent
         Tuple of (is_new: bool, manifest_path: str)
     """
     # Load or create manifest
-    existing_manifest = load_manifest(manifest_path)
-    is_new = existing_manifest is None
-    manifest = existing_manifest if existing_manifest else {}
+    manifest = load_manifest(manifest_path)
+    is_new = manifest is None
+    
+    if is_new:
+        manifest = configparser.ConfigParser()
+        manifest_section = f"{MANIFEST_NS}:"
+        manifest.add_section(manifest_section)
+        manifest.set(manifest_section, "version", VERSION)
     
     # Sync with clips directory
     sync_manifest_from_clips(clip_dir, manifest, delete_absent)
     
+    # Save the updated manifest
+    save_manifest(manifest, manifest_path)
+    
     return is_new, str(manifest_path.resolve())
 
-def update_manifest(manifest_path: Path, manifest_to_update: Optional[Dict[str, Any]] = None) -> str:
+def update_manifest(manifest_path: Path) -> str:
     """
     Update manifest to ensure it's cohesive with latest code changes.
     
@@ -228,18 +314,14 @@ def update_manifest(manifest_path: Path, manifest_to_update: Optional[Dict[str, 
     
     Args:
         manifest_path: Manifest file to load and update
-        manifest_to_update: If provided, update this manifest instead of loading from file
     
     Returns:
         Path to the updated manifest
     """
-    # Load manifest if not provided
-    if manifest_to_update is None:
-        manifest = load_manifest(manifest_path)
-        if manifest is None:
-            raise ValueError(f"Manifest file '{manifest_path}' does not exist. Use -u/--update-from-clips to create from clip directory.")
-    else:
-        manifest = manifest_to_update
+    # Load manifest
+    manifest = load_manifest(manifest_path)
+    if manifest is None:
+        raise ValueError(f"Manifest file '{manifest_path}' does not exist. Use -u/--update-from-clips to create from clip directory.")
     
     # Apply management operations
     assign_uids(manifest)
@@ -259,9 +341,9 @@ def main():
         epilog="""
 Examples:
   %(prog)s eye_manifest.cfg                          # Update existing manifest
-  %(prog)s -u ./clips eye_manifest.cfg               # Generate/update from clips, delete missing
+  %(prog)s -u ./clips eye_manifest.cfg               # Generate/update from clips
   %(prog)s -u ./clips -d eye_manifest.cfg            # Generate/update from clips and delete missing files
-  %(prog)s -u ./clips my_manifest.cfg                # Use custom manifest output path
+  %(prog)s --migrate old_manifest.cfg                # Migrate old manifest format to new namespace format
         """
     )
     
@@ -284,12 +366,28 @@ Examples:
         help="When used with -u/--update-from-clips: remove entries for files no longer present in clip directory. "
              "Has no effect without -u/--update-from-clips."
     )
+    
+    parser.add_argument(
+        "--migrate",
+        action="store_true",
+        help="Migrate old manifest format (without namespace prefixes) to new namespace format. "
+             "Required when loading manifests with version mismatch."
+    )
 
     args = parser.parse_args()
     
     manifest_path = Path(args.manifest_file)
     
     try:
+        if args.migrate:
+            # Migrate old manifest format
+            manifest = configparser.ConfigParser()
+            manifest.read(manifest_path)
+            migrated_manifest = migrate_old_manifest(manifest)
+            save_manifest(migrated_manifest, manifest_path)
+            print(f"Migrated manifest: {manifest_path}")
+            return
+        
         if args.update_from_clips:
             # Update from clips directory
             is_new, result_path = update_manifest_from_clips(
@@ -301,6 +399,11 @@ Examples:
             status = "Created new" if is_new else "Updated existing"
             print(f"{status} manifest: {result_path}")
             
+            # Also apply normal update operations
+            result_path = update_manifest(manifest_path)
+            print(f"Updated manifest: {result_path}")
+            return
+        
         # Normal update operation
         result_path = update_manifest(manifest_path)
         print(f"Updated manifest: {result_path}")
