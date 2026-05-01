@@ -1,0 +1,64 @@
+[build-system]
+requires = ["setuptools>=65.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "rhino_eyes_manager"
+version = "0.1.2"
+description = "Manage an eye animation manifest for character clips in Godot ConfigFile format"
+requires-python = ">=3.8"
+license = {text = "MIT"}
+authors = [
+    {name = "RhinoEyes Contributors"}
+]
+keywords = [
+    "animation",
+    "manifest",
+    "godot",
+    "eye-animation",
+    "character-clips",
+]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Environment :: Console",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Natural Language :: English",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Multimedia :: Graphics :: 3D Animation",
+    "Topic :: Utilities",
+]
+
+[project.scripts]
+rhino_eyes_manager = "lib.__main__:main"
+
+[tool.setuptools]
+packages = ["lib"]
+
+[tool.black]
+line-length = 100
+target-version = ['py38']
+
+[tool.isort]
+profile = "black"
+line_length = 100
+
+[tool.mypy]
+python_version = "3.8"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = false
+
+[tool.pylint.messages_control]
+disable = [
+    "C0103",  # Invalid constant name
+    "C0114",  # Missing module docstring
+    "R0903",  # Too few public methods
+]

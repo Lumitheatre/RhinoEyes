@@ -25,3 +25,6 @@ assets/eyes/v1
 addons/*
 !addons/.editorconfig
 .addons/*
+
+*.egg-info
+*__pycache__/
