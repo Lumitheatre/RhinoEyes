@@ -5,6 +5,7 @@ import sys
 from pathlib import Path
 
 from .manifest_manager import ManifestManager
+from .sheet_builder import SheetBuilder
 from .constants import VERSION
 
 
@@ -69,6 +70,18 @@ Examples:
     )
 
     parser.add_argument(
+        "--build-sheets",
+        action="store_true",
+        help="Build animation sheets from the manifest configuration. Requires manifest to have sheets defined.",
+    )
+
+    parser.add_argument(
+        "--regenerate-tiles",
+        action="store_true",
+        help="When used with --build-sheets: recreate all tiles even if they already exist. Without this flag, existing tiles are skipped.",
+    )
+
+    parser.add_argument(
         "--version",
         action="version",
         version=f"%(prog)s {VERSION}",
@@ -118,6 +131,17 @@ Examples:
             
             operation = "Reallocated" if args.reallocate_clips_to_sheets else "Allocated"
             print(f"{operation} clips to sheets: {manifest_path}")
+            return
+
+        if args.build_sheets:
+            # Build sheets from manifest
+            manifest = manager.load_manifest(manifest_path)
+            if manifest is None:
+                raise ValueError(f"Manifest file '{manifest_path}' does not exist.")
+            
+            builder = SheetBuilder(manifest, regenerate_tiles=args.regenerate_tiles)
+            builder.run()
+            print(f"Built sheets from manifest: {manifest_path}")
             return
 
         # Normal update operation

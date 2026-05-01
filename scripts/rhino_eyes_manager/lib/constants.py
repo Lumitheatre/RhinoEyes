@@ -6,3 +6,7 @@ VERSION = "0.1.2"
 ACTOR_NS = "actor"
 MANIFEST_NS = "manifest"
 SHEET_NS = "sheet"
+
+# Sheet Builder Constants
+FFMPEG_LOG_LEVEL = "error"  # Change to "info" for debugging
+MAX_WORKERS = 5  # Maximum number of parallel tile normalization jobs

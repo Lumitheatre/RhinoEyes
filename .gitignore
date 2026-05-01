@@ -16,8 +16,7 @@ export_credentials.cfg
 data_*/
 mono_crash.*.json
 
-*.mp4
-assets/eyes/v1
+assets/eyes/v*
 
 # Godot 4+ specific ignores
 .godot/

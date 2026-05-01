@@ -11,6 +11,9 @@ license = {text = "MIT"}
 authors = [
     {name = "RhinoEyes Contributors"}
 ]
+dependencies = [
+    "rich>=15.0.0",
+]
 keywords = [
     "animation",
     "manifest",
