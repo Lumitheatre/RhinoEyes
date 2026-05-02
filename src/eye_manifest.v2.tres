@@ -1,0 +1,8 @@
+[gd_resource type="Resource" script_class="EyeManifest" format=3 uid="uid://blyi08radsybv"]
+
+[ext_resource type="Script" uid="uid://804484b6vio8" path="res://src/eye_manifest.gd" id="1_byl3d"]
+
+[resource]
+script = ExtResource("1_byl3d")
+config_file_path = "res://src/eye_manifest.v2.cfg"
+metadata/_custom_type_script = "uid://804484b6vio8"

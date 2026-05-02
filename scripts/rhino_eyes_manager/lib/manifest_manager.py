@@ -61,12 +61,16 @@ class ManifestManager:
         # Check for version in manifest: section (new format)
         manifest_section = f"{MANIFEST_NS}:"
         if manifest.has_section(manifest_section) and manifest.has_option(manifest_section, "version"):
-            manifest_version = manifest.get(manifest_section, "version")
+            manifest_version = manifest.get(manifest_section, "version").strip('"')
         # Fall back to DEFAULT section (old format, will fail with migration prompt)
         elif manifest.has_option("DEFAULT", "manifest_version"):
             manifest_version = manifest.get("DEFAULT", "manifest_version")
         else:
-            # No version found
+            raise ValueError(
+                f"Manifest version not found in '{manifest_path}'. "
+                f"Expected to find 'version' in section '{manifest_section}' or 'manifest_version' in DEFAULT. "
+                f"Use --migrate to convert old format."
+            )
             return None
 
         if manifest_version != VERSION:
@@ -83,7 +87,8 @@ class ManifestManager:
         manifest_section = f"{MANIFEST_NS}:"
         if not manifest.has_section(manifest_section):
             manifest.add_section(manifest_section)
-        manifest.set(manifest_section, "version", VERSION)
+            manifest.set(manifest_section, "version", f'\"{VERSION}\"')
+
 
         with open(manifest_path, "w") as f:
             manifest.write(f)

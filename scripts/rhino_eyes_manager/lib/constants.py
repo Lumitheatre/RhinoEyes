@@ -1,6 +1,6 @@
 """Constants for RhinoEyes manifest management."""
 
-VERSION = "0.1.2"
+VERSION = "0.2.0"
 
 # Manifest namespace prefixes
 ACTOR_NS = "actor"
