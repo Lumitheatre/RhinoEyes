@@ -21,12 +21,14 @@ func _ready():
 		mesh = PlaneMesh.new()
 		# Rotate 90 degrees on X axis to face the camera
 		rotation.x = PI / 2.0
-	
+
 	_setup_material()
+	await _wait_for_eye_manager_ready()
+	_update_display()
 
 func _get_property_list():
 	var properties = []
-	
+
 	# Get character list from EyeManager
 	var eye_manager = _get_eye_manager()
 	if eye_manager:
@@ -38,7 +40,7 @@ func _get_property_list():
 				"hint": PROPERTY_HINT_ENUM,
 				"hint_string": ",".join(names)
 			})
-	
+
 	if _character_name != "":
 		properties.append({
 			"name": "view_angle",
@@ -53,7 +55,7 @@ func _get_property_list():
 			"hint": PROPERTY_HINT_RANGE,
 			"hint_string": "1,3"
 		})
-	
+
 	return properties
 
 func _get(property):
@@ -83,7 +85,7 @@ func _set(property, value):
 func _setup_material():
 	if not eye_shader:
 		return
-	
+
 	# Create a unique material for this instance so actors can have different states
 	var mat = ShaderMaterial.new()
 	mat.shader = eye_shader
@@ -97,26 +99,26 @@ func _update_display():
 func _request_video_and_update():
 	if _character_name == "":
 		return
-	
+
 	var eye_manager = _get_eye_manager()
 	if not eye_manager:
 		push_error("EyeActor: Could not find EyeManager node. Make sure it's in the scene with unique name '%EyeManager'")
 		return
-	
+
 	var result = eye_manager.get_video_texture_and_uvs(_character_name, _view_angle, _aggravation)
 
 	# print("Received video data for character '%s': %s" % [_character_name, result])
-	
+
 	if result.is_empty():
 		push_error("EyeActor: Failed to get video texture and UVs for character '%s'" % _character_name)
 		return
-	
+
 	# Release old video reference if we're switching
 	if current_video_stream_player and current_video_stream_player != result.get("video_stream_player"):
 		eye_manager.release_video_player(current_video_stream_player)
-	
+
 	current_video_stream_player = result.get("video_stream_player")
-	
+
 	if material_override:
 		_apply_texture_and_uvs(result)
 
@@ -124,15 +126,15 @@ func _request_video_and_update():
 func _apply_texture_and_uvs(texture_data: Dictionary):
 	if not material_override:
 		return
-	
+
 	var texture = texture_data.get("texture")
 	var uv_offset = texture_data.get("uv_offset", Vector2.ZERO)
 	var uv_scale = texture_data.get("uv_scale", Vector2.ONE)
 	var aspect_ratio = texture_data.get("aspect_ratio", 1.0)
-	
+
 	if texture:
 		material_override.set_shader_parameter("video_texture", texture)
-	
+
 	# Pass UV bounds and aspect ratio to the shader
 	material_override.set_shader_parameter("uv_offset", uv_offset)
 	material_override.set_shader_parameter("uv_scale", uv_scale)
@@ -157,6 +159,11 @@ func _get_eye_manager() -> EyeManager:
 	if not is_inside_tree():
 		return null
 	return EyeManager.instance
+
+func _wait_for_eye_manager_ready():
+	var eye_manager = _get_eye_manager()
+	if eye_manager:
+		await eye_manager.ready
 
 ## Public API for setting character state (useful for runtime)
 func set_character_state(name: String, angle: int, aggrav: int):
