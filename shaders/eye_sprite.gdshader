@@ -7,9 +7,9 @@ uniform vec2 uv_scale = vec2(0.125, 0.125); // Default to 1/8th for 8x8 grid
 uniform float tile_aspect_ratio = 1.0;
 
 // Film Aesthetic Controls
-uniform float exposure : hint_range(0.0, 5.0) = 0.8;
-uniform float contrast : hint_range(0.0, 3.0) = 1.2;
-uniform float emission_strength : hint_range(0.0, 10.0) = 1.0;  // Applied after contrast
+uniform float exposure : hint_range(0.0, 5.0) = 1.2;
+uniform float contrast : hint_range(0.0, 5.0) = 3;
+uniform float emission_strength : hint_range(0.0, 10.0) = 1.2;  // Applied after contrast
 uniform vec3 tint : source_color = vec3(1.0);
 
 // Gate Flicker Controls

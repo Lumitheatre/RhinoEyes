@@ -57,7 +57,7 @@ manifest = ExtResource("2_ub6vd")
 metadata/_custom_type_script = "uid://cteeeb0bmtmg5"
 
 [node name="EyeActor" type="MeshInstance3D" parent="EyeManager" unique_id=2021718081]
-transform = Transform3D(1, 0, 0, 0, -4.371139e-08, -1, 0, 1, -4.371139e-08, -1.031466, 0.0029996634, 0)
+transform = Transform3D(1, 0, 0, 0, -4.371139e-08, -1, 0, 1, -4.371139e-08, -1.0558429, 0.0029996634, 0)
 material_override = SubResource("ShaderMaterial_ub6vd")
 mesh = SubResource("PlaneMesh_hrmib")
 script = ExtResource("4_tsohr")
