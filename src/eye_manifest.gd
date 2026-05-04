@@ -80,6 +80,10 @@ func find_clip(actor_name: String, angle: int, aggravation: int) -> Dictionary:
 		# Aggravation must match exactly
 		if clip.get("aggravation", 1) != aggravation:
 			continue
+			
+		# Angle -1 is a special "look at camera" state, exclude from nearest angle search
+		if clip["angle"] == -1:
+			continue
 		
 		# Find the closest angle
 		var clip_angle = clip.get("angle", -1)

@@ -1,6 +1,6 @@
 @tool
 extends Resource
-class_name EyeManifest
+class_name EyeManifestV1
 
 @export_file("*.cfg") var config_path: String:
 	set(val):

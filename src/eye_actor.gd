@@ -38,8 +38,6 @@ func _get_property_list():
 				"hint": PROPERTY_HINT_ENUM,
 				"hint_string": ",".join(names)
 			})
-	else:
-		push_error("EyeActor: Could not find EyeManager node. Make sure it's in the scene")
 	
 	if _character_name != "":
 		properties.append({

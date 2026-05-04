@@ -2,26 +2,52 @@
 
 [ext_resource type="Script" uid="uid://cteeeb0bmtmg5" path="res://src/eye_manager.gd" id="1_ern2u"]
 [ext_resource type="Script" uid="uid://brvjdnnvv2hyx" path="res://src/eye_actor.gd" id="1_k3kgp"]
+[ext_resource type="Resource" uid="uid://blyi08radsybv" path="res://src/eye_manifest.v2.tres" id="2_hrmib"]
 [ext_resource type="Shader" uid="uid://bo5kmp1540awj" path="res://shaders/eye_sprite.gdshader" id="3_hrmib"]
 
-[sub_resource type="ShaderMaterial" id="ShaderMaterial_ern2u"]
+[sub_resource type="Texture2DRD" id="Texture2DRD_23qsa"]
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_p1pdf"]
 render_priority = 0
 shader = ExtResource("3_hrmib")
-shader_parameter/uv_offset = Vector2(0, 0)
-shader_parameter/uv_scale = Vector2(1, 1)
+shader_parameter/video_texture = SubResource("Texture2DRD_23qsa")
+shader_parameter/uv_offset = Vector2(0.125, 0.5)
+shader_parameter/uv_scale = Vector2(0.125, 0.125)
 shader_parameter/tint = Color(1, 1, 1, 1)
 
 [sub_resource type="PlaneMesh" id="PlaneMesh_hrmib"]
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_hrmib"]
+render_priority = 0
+shader = ExtResource("3_hrmib")
+shader_parameter/video_texture = SubResource("Texture2DRD_23qsa")
+shader_parameter/uv_offset = Vector2(0.25, 0.25)
+shader_parameter/uv_scale = Vector2(0.125, 0.125)
+shader_parameter/tint = Color(1, 1, 1, 1)
 
 [node name="Node3D" type="Node3D" unique_id=924618023]
 
 [node name="EyeManager" type="Node" parent="." unique_id=2021950246]
 script = ExtResource("1_ern2u")
+manifest = ExtResource("2_hrmib")
 metadata/_custom_type_script = "uid://cteeeb0bmtmg5"
 
 [node name="EyeActor" type="MeshInstance3D" parent="EyeManager" unique_id=2021718081]
 transform = Transform3D(1, 0, 0, 0, -4.371139e-08, -1, 0, 1, -4.371139e-08, 0, 0, 0)
-material_override = SubResource("ShaderMaterial_ern2u")
+material_override = SubResource("ShaderMaterial_p1pdf")
 mesh = SubResource("PlaneMesh_hrmib")
 script = ExtResource("1_k3kgp")
+character_name = "Dasha"
+view_angle = 360
+aggravation = 1
+metadata/_custom_type_script = "uid://brvjdnnvv2hyx"
+
+[node name="EyeActor2" type="MeshInstance3D" parent="EyeManager" unique_id=64907441]
+transform = Transform3D(1, 0, 0, 0, -4.371139e-08, -1, 0, 1, -4.371139e-08, 2.206763, 0, 0)
+material_override = SubResource("ShaderMaterial_hrmib")
+mesh = SubResource("PlaneMesh_hrmib")
+script = ExtResource("1_k3kgp")
+character_name = "Alisa"
+view_angle = 0
+aggravation = 1
 metadata/_custom_type_script = "uid://brvjdnnvv2hyx"

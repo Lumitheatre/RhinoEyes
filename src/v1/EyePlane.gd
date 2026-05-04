@@ -1,7 +1,7 @@
 @tool
 extends MeshInstance3D
 
-@export var manifest: EyeManifest:
+@export var manifest: EyeManifestV1:
 	set(val):
 		manifest = val
 		if manifest: manifest.changed.connect(_refresh_video)
