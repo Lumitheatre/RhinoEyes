@@ -63,6 +63,6 @@ void fragment() {
         // 5. Final Output
         // Using EMISSION > 1.0 triggers the WorldEnvironment Glow
         EMISSION = vec3(luma * flicker) * tint;
-        ALPHA = tex.a;
+        ALPHA = luma;
     }
 }

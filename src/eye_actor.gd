@@ -7,6 +7,48 @@ class_name EyeActor
 		eye_shader = val
 		_setup_material()
 
+# --- Proxy Properties for Shader Uniforms ---
+@export_group("Film Aesthetics")
+
+@export_range(0.0, 5.0, 0.01) var exposure: float = 1.2:
+	set(val):
+		exposure = val
+		_set_material_uniform("exposure", exposure)
+
+@export_range(0.0, 5.0, 0.01) var contrast: float = 3.0:
+	set(val):
+		contrast = val
+		_set_material_uniform("contrast", contrast)
+
+@export_range(0.0, 10.0, 0.01) var emission_strength: float = 1.2:
+	set(val):
+		emission_strength = val
+		_set_material_uniform("emission_strength", emission_strength)
+
+@export_group("Film Flicker")
+
+@export var enable_flicker: bool = true:
+	set(val):
+		enable_flicker = val
+		_set_material_uniform("enable_flicker", enable_flicker)
+
+@export_range(1.0, 30.0, 0.1) var flicker_frequency: float = 15.0:
+	set(val):
+		flicker_frequency = val
+		_set_material_uniform("flicker_frequency", flicker_frequency)
+
+@export_range(0.0, 1.0, 0.01) var flicker_amplitude: float = 0.08:
+	set(val):
+		flicker_amplitude = val
+		_set_material_uniform("flicker_amplitude", flicker_amplitude)
+
+@export_range(0.0, 100000.0, 1.0) var flicker_seed: float = 43758.5453:
+	set(val):
+		flicker_seed = val
+		_set_material_uniform("flicker_seed", flicker_seed)
+
+@export_group("Eye Character")
+
 # State - the only things the actor tracks
 var _character_name: String = ""
 var _view_angle: int = 0
@@ -23,6 +65,7 @@ func _ready():
 		rotation.x = PI / 2.0
 
 	_setup_material()
+	_sync_all_proxy_properties()
 	await _wait_for_eye_manager_ready()
 	_update_display()
 
@@ -139,6 +182,24 @@ func _apply_texture_and_uvs(texture_data: Dictionary):
 	material_override.set_shader_parameter("uv_offset", uv_offset)
 	material_override.set_shader_parameter("uv_scale", uv_scale)
 	material_override.set_shader_parameter("tile_aspect_ratio", aspect_ratio)
+
+## Sync all proxy properties to the shader material
+func _sync_all_proxy_properties():
+	# Call this in _ready to ensure the saved values are loaded
+	# into the unique material instance.
+	_set_material_uniform("exposure", exposure)
+	_set_material_uniform("contrast", contrast)
+	_set_material_uniform("emission_strength", emission_strength)
+	_set_material_uniform("enable_flicker", enable_flicker)
+	_set_material_uniform("flicker_frequency", flicker_frequency)
+	_set_material_uniform("flicker_amplitude", flicker_amplitude)
+	_set_material_uniform("flicker_seed", flicker_seed)
+
+## Robust helper function for setting shader uniforms
+func _set_material_uniform(uniform_name: String, value):
+	# Using material_override ensures we are touching the unique instance
+	if material_override and material_override is ShaderMaterial:
+		material_override.set_shader_parameter(uniform_name, value)
 
 func _process(_delta):
 	# Update the texture every frame so it plays in the editor viewport
