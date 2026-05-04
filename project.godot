@@ -11,7 +11,7 @@ config_version=5
 [application]
 
 config/name="RhinoEyes"
-run/main_scene="uid://cj2s3wbt2oi3j"
+run/main_scene="uid://chkvgxs8328fx"
 config/features=PackedStringArray("4.6", "Forward Plus")
 config/icon="res://icon.svg"
 

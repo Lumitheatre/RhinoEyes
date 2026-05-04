@@ -1,0 +1,13 @@
+[gd_resource type="Environment" format=3 uid="uid://c16o62kclc4ds"]
+
+[resource]
+background_mode = 1
+background_energy_multiplier = 0.0
+ambient_light_source = 1
+glow_enabled = true
+glow_levels/2 = 2.85
+glow_levels/3 = 0.82
+glow_intensity = 0.8
+glow_bloom = 0.14
+glow_blend_mode = 0
+adjustment_enabled = true
