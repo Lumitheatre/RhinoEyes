@@ -6,24 +6,56 @@ class_name EyeManifest
 	set(val):
 		config_file_path = val
 		_parse_manifest()
+		_setup_file_watcher()
 
 # Internal storage for parsed data
 var actors: Dictionary = {}
 var sheets: Dictionary = {}
-var _file_watcher_connected: bool = false
+var _last_modified_time: int = 0
+var _poll_interval: float = 1.0  # Check every 1 second
 
 func _ready():
-	# Connect to filesystem changes in editor
+	# Initialize file watcher in editor mode only
 	if Engine.is_editor_hint():
-		var fs = EditorInterface.get_resource_filesystem()
-		fs.filesystem_changed.connect(_on_filesystem_changed)
-		print("EyeManifest: Connected to filesystem changes for auto-reload.")
+		call_deferred("_setup_file_watcher")
 	_parse_manifest()
 
-func _on_filesystem_changed():
-	# Optional: Check if specifically our config file changed
-	print("File changed, reloading...")
-	_parse_manifest()
+func _setup_file_watcher():
+	# Only works in editor and if config file is set
+	if not Engine.is_editor_hint() or config_file_path == "":
+		return
+
+	# Store initial modification time
+	if FileAccess.file_exists(config_file_path):
+		_last_modified_time = FileAccess.get_modified_time(config_file_path)
+
+	print("EyeManifest: File watcher started for '%s' (polling every %.1f seconds)" % [config_file_path, _poll_interval])
+	_start_monitoring()
+
+func _start_monitoring():
+	# Only set up monitoring in editor
+	if not Engine.is_editor_hint() or config_file_path == "":
+		return
+
+	# Create a main loop timer that doesn't need to be added to the tree
+	var timer = Engine.get_main_loop().create_timer(_poll_interval)
+	timer.timeout.connect(_on_check_file_modified)
+
+func _on_check_file_modified():
+	# Safety check
+	if config_file_path == "" or not FileAccess.file_exists(config_file_path):
+		_start_monitoring()  # Restart monitoring even if file doesn't exist yet
+		return
+
+	# Check if file has been modified
+	var current_modified_time = FileAccess.get_modified_time(config_file_path)
+	if current_modified_time > _last_modified_time:
+		_last_modified_time = current_modified_time
+		print("EyeManifest: Config file %s modified, reloading manifest..." % config_file_path)
+		_parse_manifest()
+
+	# Restart the monitoring
+	_start_monitoring()
 
 ## Manual reload function for user to call from editor
 func reload_manifest():
@@ -42,11 +74,9 @@ func _parse_manifest():
 	sheets.clear()
 
 	var sections = config.get_sections()
-	print("All sections: ", sections)
 
 	for section in sections:
 		var keys = config.get_section_keys(section)
-		print("Section '%s' keys: %s" % [section, keys])
 
 	for section in sections:
 		if section.begins_with("actor:"):
