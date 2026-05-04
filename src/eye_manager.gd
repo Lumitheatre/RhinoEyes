@@ -25,10 +25,17 @@ func _get_configuration_warnings() -> PackedStringArray:
 
 # Keyed by file path: { "path": { "player": VideoStreamPlayer, "users": int } }
 var video_pool: Dictionary = {}
+var _video_container: Node = null
 
 func _ready():
 	if not manifest:
 		push_error("EyeManager: Manifest not assigned! Please assign eye_manifest.v2.tres in the Inspector.")
+
+	# Create a hidden container for video players so they don't appear in the viewport
+	_video_container = Control.new()
+	_video_container.name = "_VideoPool_Hidden"
+	add_child(_video_container)
+	_video_container.hide()
 
 ## Get list of available actor names from the manifest
 func get_actor_names() -> PackedStringArray:
@@ -96,8 +103,8 @@ func request_video_texture(path: String) -> VideoStreamPlayer:
 	vsp.autoplay = true
 	vsp.loop = true
 
-	# Add as child to keep it alive
-	add_child(vsp)
+	# Add as child to the hidden container to keep it alive but invisible
+	_video_container.add_child(vsp)
 	vsp.play()
 
 	video_pool[path] = {"player": vsp, "users": 1}
