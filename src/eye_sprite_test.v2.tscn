@@ -11,8 +11,9 @@
 render_priority = 0
 shader = ExtResource("3_hrmib")
 shader_parameter/video_texture = SubResource("Texture2DRD_23qsa")
-shader_parameter/uv_offset = Vector2(0.125, 0.5)
+shader_parameter/uv_offset = Vector2(0.625, 0.5)
 shader_parameter/uv_scale = Vector2(0.125, 0.125)
+shader_parameter/tile_aspect_ratio = 1.7777777777777777
 shader_parameter/tint = Color(1, 1, 1, 1)
 
 [sub_resource type="PlaneMesh" id="PlaneMesh_hrmib"]
@@ -21,8 +22,9 @@ shader_parameter/tint = Color(1, 1, 1, 1)
 render_priority = 0
 shader = ExtResource("3_hrmib")
 shader_parameter/video_texture = SubResource("Texture2DRD_23qsa")
-shader_parameter/uv_offset = Vector2(0.25, 0.25)
+shader_parameter/uv_offset = Vector2(0.5, 0.25)
 shader_parameter/uv_scale = Vector2(0.125, 0.125)
+shader_parameter/tile_aspect_ratio = 1.7777777777777777
 shader_parameter/tint = Color(1, 1, 1, 1)
 
 [node name="Node3D" type="Node3D" unique_id=924618023]
@@ -38,7 +40,7 @@ material_override = SubResource("ShaderMaterial_p1pdf")
 mesh = SubResource("PlaneMesh_hrmib")
 script = ExtResource("1_k3kgp")
 character_name = "Dasha"
-view_angle = 360
+view_angle = 62
 aggravation = 1
 metadata/_custom_type_script = "uid://brvjdnnvv2hyx"
 
@@ -48,6 +50,6 @@ material_override = SubResource("ShaderMaterial_hrmib")
 mesh = SubResource("PlaneMesh_hrmib")
 script = ExtResource("1_k3kgp")
 character_name = "Alisa"
-view_angle = 0
-aggravation = 1
+view_angle = 352
+aggravation = 3
 metadata/_custom_type_script = "uid://brvjdnnvv2hyx"

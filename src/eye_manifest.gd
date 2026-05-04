@@ -10,6 +10,37 @@ class_name EyeManifest
 # Internal storage for parsed data
 var actors: Dictionary = {}
 var sheets: Dictionary = {}
+var _file_watcher_connected: bool = false
+
+func _init():
+	# Connect file watcher when resource is created/loaded
+	if Engine.is_editor_hint():
+		call_deferred("_setup_file_watcher")
+
+func _setup_file_watcher():
+	if _file_watcher_connected or not Engine.is_editor_hint():
+		return
+	
+	# Get EditorFileSystem instance - compatible with different Godot versions
+	var editor_fs = EditorInterface.get_resource_filesystem()
+	
+	if editor_fs and not editor_fs.is_connected("filesystem_changed", Callable(self, "_on_filesystem_changed")):
+		editor_fs.connect("filesystem_changed", Callable(self, "_on_filesystem_changed"))
+		_file_watcher_connected = true
+		print("EyeManifest: File watcher connected")
+	else:
+		push_warning("EyeManifest: Could not connect file watcher - EditorInterface unavailable")
+
+func _on_filesystem_changed():
+	# Reload if the config file changed
+	if config_file_path != "":
+		print("EyeManifest: Detected file system change, reloading manifest...")
+		_parse_manifest()
+
+## Manual reload function for user to call from editor
+func reload_manifest():
+	print("EyeManifest: Manual reload requested")
+	_parse_manifest()
 
 func _parse_manifest():
 	if config_file_path == "": return
@@ -38,17 +69,26 @@ func _parse_manifest():
 			var grid_width = int(grid_parts[0]) if grid_parts.size() > 0 else 8
 			var grid_height = int(grid_parts[1]) if grid_parts.size() > 1 else 8
 			
+			var resolution = config.get_value(section, "resolution", "512x512")
+			var res_parts = resolution.split("x")
+			var res_width = int(res_parts[0]) if res_parts.size() > 0 else 512
+			var res_height = int(res_parts[1]) if res_parts.size() > 1 else 512
+			
 			sheets[section.replace("sheet:", "")] = {
 				"path": config.get_value(section, "path", "").strip_edges().replace('"', ''),
 				"duration": config.get_value(section, "loop_duration", 30.0),
 				"grid_width": grid_width,
 				"grid_height": grid_height,
-				"fps": config.get_value(section, "fps", 30)
+				"fps": config.get_value(section, "fps", 30),
+				"res_width": res_width,
+				"res_height": res_height,
 			}
 
-			print("Sheet '%s': path=%s, duration=%.2f, grid=%dx%d, fps=%d" % [
+			print("Sheet '%s': path=%s, resolution %dx%d, duration=%.2f, grid=%dx%d, fps=%d" % [
 				section.replace("sheet:", ""),
 				sheets[section.replace("sheet:", "")].path,
+				res_width,
+				res_height,
 				sheets[section.replace("sheet:", "")].duration,
 				grid_width,
 				grid_height,
@@ -96,7 +136,8 @@ func find_clip(actor_name: String, angle: int, aggravation: int) -> Dictionary:
 	return closest_clip
 
 ## Calculate UV bounds (offset and scale) for a sprite in the sheet
-## Returns a dictionary with "uv_offset" (top-left) and "uv_scale" (width/height) in UV space
+## Returns a dictionary with "uv_offset" (top-left), "uv_scale" (width/height) in UV space,
+## and "aspect_ratio" (width/height) of the tile
 func calculate_uv_bounds(sheet_id: String, sheet_slot: int) -> Dictionary:
 	var sheet_info = get_sheet_info(sheet_id)
 	if sheet_info.is_empty():
@@ -121,15 +162,14 @@ func calculate_uv_bounds(sheet_id: String, sheet_slot: int) -> Dictionary:
 	
 	# UV scale is the tile size
 	var uv_scale = Vector2(tile_width, tile_height)
-	
+
+	# Calculate tile aspect ratio from spreadsheet resolution and grid
+	var res_width = float(sheet_info.get("res_width", 512))
+	var res_height = float(sheet_info.get("res_height", 512))
+	var tile_aspect_ratio = (res_width / float(grid_width)) / (res_height / float(grid_height)) 
+
 	return {
 		"uv_offset": uv_offset,
-		"uv_scale": uv_scale
+		"uv_scale": uv_scale,
+		"aspect_ratio": tile_aspect_ratio
 	}
-
-## Deprecated: Use calculate_uv_bounds instead
-func calculate_uv_offset(sheet_id: String, sheet_slot: int) -> Vector2:
-	var bounds = calculate_uv_bounds(sheet_id, sheet_slot)
-	if bounds.is_empty():
-		return Vector2.ZERO
-	return bounds.get("uv_offset", Vector2.ZERO)

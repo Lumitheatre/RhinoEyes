@@ -74,6 +74,7 @@ func get_video_texture_and_uvs(actor_name: String, angle: int, aggravation: int)
 		"texture": vsp.get_video_texture(),
 		"uv_offset": uv_bounds.get("uv_offset", Vector2.ZERO),
 		"uv_scale": uv_bounds.get("uv_scale", Vector2.ONE),
+		"aspect_ratio": uv_bounds.get("aspect_ratio", 1.0),
 		"video_stream_player": vsp
 	}
 

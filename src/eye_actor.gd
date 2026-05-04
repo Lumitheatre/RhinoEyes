@@ -104,6 +104,8 @@ func _request_video_and_update():
 		return
 	
 	var result = eye_manager.get_video_texture_and_uvs(_character_name, _view_angle, _aggravation)
+
+	# print("Received video data for character '%s': %s" % [_character_name, result])
 	
 	if result.is_empty():
 		push_error("EyeActor: Failed to get video texture and UVs for character '%s'" % _character_name)
@@ -126,13 +128,15 @@ func _apply_texture_and_uvs(texture_data: Dictionary):
 	var texture = texture_data.get("texture")
 	var uv_offset = texture_data.get("uv_offset", Vector2.ZERO)
 	var uv_scale = texture_data.get("uv_scale", Vector2.ONE)
+	var aspect_ratio = texture_data.get("aspect_ratio", 1.0)
 	
 	if texture:
 		material_override.set_shader_parameter("video_texture", texture)
 	
-	# Pass UV bounds directly to the shader
+	# Pass UV bounds and aspect ratio to the shader
 	material_override.set_shader_parameter("uv_offset", uv_offset)
 	material_override.set_shader_parameter("uv_scale", uv_scale)
+	material_override.set_shader_parameter("tile_aspect_ratio", aspect_ratio)
 
 func _process(_delta):
 	# Update the texture every frame so it plays in the editor viewport
