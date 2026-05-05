@@ -121,14 +121,14 @@ class ManifestManager:
 
     def get_sheet_capacity(self, manifest: configparser.ConfigParser, sheet_id: str) -> int:
         """
-        Calculate the capacity of a sheet based on its grid dimensions.
+        Calculate the capacity of a sheet based on its grid dimensions and number of channels.
 
         Args:
             manifest: The manifest config
             sheet_id: The sheet identifier (e.g., "1" from "sheet:1")
 
         Returns:
-            The total capacity (width * height) or 0 if grid not found
+            The total capacity (width * height * num_channels) or 0 if grid not found
         """
         sheet_section = f"{SHEET_NS}:{sheet_id}"
         if not manifest.has_section(sheet_section):
@@ -144,11 +144,47 @@ class ManifestManager:
             if len(parts) == 2:
                 width = int(parts[0])
                 height = int(parts[1])
-                return width * height
+                grid_capacity = width * height
+
+                # Multiply by number of channels
+                channels = self.get_sheet_channels(manifest, sheet_id)
+                return grid_capacity * len(channels)
         except (ValueError, AttributeError):
             pass
 
         return 0
+
+    def get_sheet_channels(self, manifest: configparser.ConfigParser, sheet_id: str) -> List[str]:
+        """
+        Get the list of channel names for a sheet.
+
+        Args:
+            manifest: The manifest config
+            sheet_id: The sheet identifier
+
+        Returns:
+            List of channel names (e.g., ["R"] or ["R", "G", "B"]), or ["R"] if not specified
+        """
+        sheet_section = f"{SHEET_NS}:{sheet_id}"
+        if not manifest.has_section(sheet_section):
+            return ["R"]  # Default to "R" if not specified
+
+        if not manifest.has_option(sheet_section, "channels"):
+            return ["R"]  # Default to "R" if not specified
+
+        channels_str = manifest.get(sheet_section, "channels")
+        try:
+            # Parse the channels array format: [ "R" ] or [ "R", "G", "B" ]
+            # Remove brackets and split
+            channels_str = channels_str.strip()
+            if channels_str.startswith("[") and channels_str.endswith("]"):
+                channels_str = channels_str[1:-1]  # Remove brackets
+                channels = [c.strip().strip('"') for c in channels_str.split(",")]
+                return [c for c in channels if c]  # Filter out empty strings
+        except (ValueError, AttributeError):
+            pass
+
+        return ["R"]  # Default to "R" if parsing fails
 
     def get_sheet_usage(self, manifest: configparser.ConfigParser, sheet_id: str) -> int:
         """
@@ -177,14 +213,15 @@ class ManifestManager:
 
     def allocate_clips_to_sheets(self, manifest: configparser.ConfigParser, clear_existing: bool = False) -> None:
         """
-        Allocate clips to sheets based on available capacity.
+        Allocate clips to sheets based on available capacity, with support for channel packing.
 
-        Sequentially assigns sheet_id and sheet_slot to clips (0-based index from top-left to bottom-right).
+        Sequentially assigns sheet_id, sheet_slot, and sheet_channel to clips.
+        Allocation order is channel-major, slot-minor: fills all slots in "R" (0-63), then "G" (0-63), etc.
         Clips are assigned to sheets based on available capacity.
 
         Args:
             manifest: The manifest config to modify in place
-            clear_existing: If True, clears all existing sheet_id and sheet_slot assignments before reallocation (destructive).
+            clear_existing: If True, clears all existing sheet_id, sheet_slot, and sheet_channel assignments (destructive).
                            If False, preserves existing assignments and only assigns unassigned clips.
 
         Unassigned clips (no sheet_id) indicate insufficient capacity.
@@ -203,12 +240,20 @@ class ManifestManager:
 
         sheets.sort()
 
-        # Initialize sheet capacity
+        # Get sheet info: capacity and channels
         sheet_capacity = {sheet_id: self.get_sheet_capacity(manifest, sheet_id) for sheet_id in sheets}
+        sheet_channels = {sheet_id: self.get_sheet_channels(manifest, sheet_id) for sheet_id in sheets}
 
-        # Initialize sheet usage and slot tracking
+        # Grid capacity per channel (total capacity / num_channels)
+        sheet_grid_capacity = {}
+        for sheet_id in sheets:
+            num_channels = len(sheet_channels[sheet_id])
+            sheet_grid_capacity[sheet_id] = sheet_capacity[sheet_id] // num_channels if num_channels > 0 else 0
+
+        # Initialize sheet usage and allocation tracking
         sheet_usage = {sheet_id: 0 for sheet_id in sheets}
-        sheet_slot = {sheet_id: 0 for sheet_id in sheets}
+        # Track next slot to fill per sheet per channel
+        sheet_next_slot = {sheet_id: {ch: 0 for ch in sheet_channels[sheet_id]} for sheet_id in sheets}
 
         # If not clearing, count existing assignments
         if not clear_existing:
@@ -220,19 +265,28 @@ class ManifestManager:
                             clips = json.loads(clips_str)
                             for clip in clips:
                                 if "sheet_id" in clip:
-                                    sheet_usage[clip["sheet_id"]] += 1
+                                    sheet_id = clip["sheet_id"]
+                                    sheet_usage[sheet_id] += 1
+                                    # Update next slot tracking for existing assignments
+                                    if "sheet_channel" in clip and "sheet_slot" in clip:
+                                        channel = clip["sheet_channel"]
+                                        slot = clip["sheet_slot"]
+                                        # Track the next available slot
+                                        if slot + 1 > sheet_next_slot[sheet_id].get(channel, 0):
+                                            sheet_next_slot[sheet_id][channel] = slot + 1
                         except json.JSONDecodeError:
                             pass
 
         operation = "Reallocating" if clear_existing else "Allocating"
         print(f"{operation} clips to {len(sheets)} sheet(s):")
         for sheet_id in sheets:
+            channels_str = ", ".join(sheet_channels[sheet_id])
             cap_str = (
                 f"/{sheet_capacity[sheet_id]}"
                 if clear_existing
                 else f"/{sheet_capacity[sheet_id]} capacity"
             )
-            print(f"  Sheet {sheet_id}: {sheet_usage[sheet_id]}{cap_str}")
+            print(f"  Sheet {sheet_id} [{channels_str}]: {sheet_usage[sheet_id]}{cap_str}")
 
         # Process each actor's clips
         for section in manifest.sections():
@@ -250,6 +304,8 @@ class ManifestManager:
                                     del clip["sheet_id"]
                                 if "sheet_slot" in clip:
                                     del clip["sheet_slot"]
+                                if "sheet_channel" in clip:
+                                    del clip["sheet_channel"]
 
                             # Skip if already assigned (when not clearing)
                             if not clear_existing and "sheet_id" in clip:
@@ -259,18 +315,26 @@ class ManifestManager:
                             assigned = False
                             for sheet_id in sheets:
                                 if sheet_usage[sheet_id] < sheet_capacity[sheet_id]:
-                                    clip["sheet_id"] = sheet_id
-                                    clip["sheet_slot"] = sheet_slot[sheet_id]
-                                    sheet_usage[sheet_id] += 1
-                                    sheet_slot[sheet_id] += 1
-                                    assigned = True
-                                    break
+                                    # Find the next available channel and slot
+                                    for channel in sheet_channels[sheet_id]:
+                                        slot = sheet_next_slot[sheet_id][channel]
+                                        if slot < sheet_grid_capacity[sheet_id]:
+                                            clip["sheet_id"] = sheet_id
+                                            clip["sheet_slot"] = slot
+                                            clip["sheet_channel"] = channel
+                                            sheet_usage[sheet_id] += 1
+                                            sheet_next_slot[sheet_id][channel] += 1
+                                            assigned = True
+                                            break
+
+                                    if assigned:
+                                        break
 
                             if not assigned:
                                 # No space available, leave unassigned
                                 pass
 
-                        manifest.set(section, "clips", json.dumps(clips, indent=2, separators=(", ", ": ")))
+                        manifest.set(section, "clips", json.dumps(clips, indent=2, separators=(', ', ': ')))
                     except json.JSONDecodeError:
                         pass
 
