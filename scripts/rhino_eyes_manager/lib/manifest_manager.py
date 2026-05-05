@@ -3,7 +3,7 @@
 import configparser
 import json
 from pathlib import Path
-from typing import List, Optional, Tuple
+from typing import List, Optional
 
 from .constants import ACTOR_NS, MANIFEST_NS, SHEET_NS, VERSION
 
@@ -79,6 +79,19 @@ class ManifestManager:
                 f"Use --migrate to convert old format."
             )
 
+        return manifest
+
+    def create_manifest(self) -> configparser.ConfigParser:
+        """
+        Create a new manifest with the current version.
+
+        Returns:
+            New ConfigParser manifest object with version set
+        """
+        manifest = configparser.ConfigParser()
+        manifest_section = f"{MANIFEST_NS}:"
+        manifest.add_section(manifest_section)
+        manifest.set(manifest_section, "version", VERSION)
         return manifest
 
     def save_manifest(self, manifest: configparser.ConfigParser, manifest_path: Path) -> None:
@@ -435,41 +448,23 @@ class ManifestManager:
             manifest.set(actor_section, "clips", json.dumps(new_clips, indent=2, separators=(", ", ": ")))
 
     def update_manifest_from_clips(
-        self, clip_dir: str, manifest_path: Path, delete_absent: bool = False
-    ) -> Tuple[bool, str]:
+        self, clip_dir: str, manifest: configparser.ConfigParser, delete_absent: bool = False
+    ) -> None:
         """
         Update manifest based on clips in directory.
 
-        Scans clip_dir for character subdirectories and .mov files, syncs the manifest,
-        then applies management updates.
+        Scans clip_dir for character subdirectories and .mov files, and syncs the manifest.
+        Does NOT save the manifest to disk; caller is responsible for that.
 
         Args:
             clip_dir: Directory containing character subdirectories with .mov clips
-            manifest_path: Output manifest file path
+            manifest: ConfigParser manifest object to update in-place
             delete_absent: If True, remove entries for files that no longer exist in clip_dir
-
-        Returns:
-            Tuple of (is_new: bool, manifest_path: str)
         """
-        # Load or create manifest
-        manifest = self.load_manifest(manifest_path)
-        is_new = manifest is None
-
-        if is_new:
-            manifest = configparser.ConfigParser()
-            manifest_section = f"{MANIFEST_NS}:"
-            manifest.add_section(manifest_section)
-            manifest.set(manifest_section, "version", VERSION)
-
         # Sync with clips directory
         self.sync_manifest_from_clips(clip_dir, manifest, delete_absent)
 
-        # Save the updated manifest
-        self.save_manifest(manifest, manifest_path)
-
-        return is_new, str(manifest_path.resolve())
-
-    def update_manifest(self, manifest_path: Path) -> str:
+    def update_manifest(self, manifest_path: Path, manifest: Optional[configparser.ConfigParser] = None) -> str:
         """
         Update manifest to ensure it's cohesive with latest code changes.
 
@@ -480,17 +475,19 @@ class ManifestManager:
 
         Args:
             manifest_path: Manifest file to load and update
+            manifest: Optional ConfigParser manifest object. If not provided, loads from manifest_path
 
         Returns:
             Path to the updated manifest
         """
-        # Load manifest
-        manifest = self.load_manifest(manifest_path)
+        # Load manifest if not provided
         if manifest is None:
-            raise ValueError(
-                f"Manifest file '{manifest_path}' does not exist. "
-                f"Use -u/--update-from-clips to create from clip directory."
-            )
+            manifest = self.load_manifest(manifest_path)
+            if manifest is None:
+                raise ValueError(
+                    f"Manifest file '{manifest_path}' does not exist. "
+                    f"Use -u/--update-from-clips to create from clip directory."
+                )
 
         # Apply management operations
         self.assign_uids(manifest)

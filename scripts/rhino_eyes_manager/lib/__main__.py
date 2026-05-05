@@ -21,7 +21,6 @@ Examples:
   %(prog)s -u ./clips eye_manifest.cfg               # Generate/update from clips
   %(prog)s -u ./clips -d eye_manifest.cfg            # Generate/update from clips and delete missing files
   %(prog)s --migrate old_manifest.cfg                # Migrate old manifest format to new namespace format
-  %(prog)s --allocate-clips-to-sheets eye_manifest.cfg  # Allocate clips to sheets based on capacity
   %(prog)s --reallocate-clips-to-sheets eye_manifest.cfg # Destructively reallocate all clips to sheets
         """,
     )
@@ -53,13 +52,6 @@ Examples:
         action="store_true",
         help="Migrate old manifest format (without namespace prefixes) to new namespace format. "
         "Required when loading manifests with version mismatch.",
-    )
-
-    parser.add_argument(
-        "--allocate-clips-to-sheets",
-        action="store_true",
-        help="Allocate clips to sheets based on available capacity (grid dimensions). "
-        "Sequentially assigns sheet_id to unassigned clips.",
     )
 
     parser.add_argument(
@@ -104,48 +96,43 @@ Examples:
             print(f"Migrated manifest: {manifest_path}")
             return
 
+        manifest = manager.load_manifest(manifest_path)
+
+        if manifest is None:
+            # Manifest doesn't exist
+            if not args.update_from_clips:
+                raise ValueError(
+                    f"Manifest file '{manifest_path}' does not exist. "
+                    f"Use -u/--update-from-clips to generate a new manifest from clips."
+                )
+            # Create new manifest
+            manifest = manager.create_manifest()
+            print("Created new manifest")
+        else:
+            print("Loaded existing manifest")
+
+        # Update from clips if requested
         if args.update_from_clips:
-            # Update from clips directory
-            is_new, result_path = manager.update_manifest_from_clips(
-                args.update_from_clips, manifest_path, args.delete_absent
+            manager.update_manifest_from_clips(
+                args.update_from_clips, manifest, args.delete_absent
             )
+            print(f"Updated manifest from clips: {args.update_from_clips}")
 
-            status = "Created new" if is_new else "Updated existing"
-            print(f"{status} manifest: {result_path}")
-
-            # Also apply normal update operations
-            result_path = manager.update_manifest(manifest_path)
-            print(f"Updated manifest: {result_path}")
-            return
-
-        if args.allocate_clips_to_sheets or args.reallocate_clips_to_sheets:
-            # Allocate clips to sheets
-            manifest = manager.load_manifest(manifest_path)
-            if manifest is None:
-                raise ValueError(f"Manifest file '{manifest_path}' does not exist.")
-
-            manager.allocate_clips_to_sheets(
-                manifest, clear_existing=args.reallocate_clips_to_sheets
-            )
-            manager.save_manifest(manifest, manifest_path)
-            
-            operation = "Reallocated" if args.reallocate_clips_to_sheets else "Allocated"
-            print(f"{operation} clips to sheets: {manifest_path}")
-            return
+        # Apply allocation (default behavior, now automatic)
+        manager.allocate_clips_to_sheets(
+            manifest, clear_existing=args.reallocate_clips_to_sheets
+        )
+        operation = "Reallocated" if args.reallocate_clips_to_sheets else "Allocated"
+        print(f"{operation} clips to sheets")
 
         if args.build_sheets:
             # Build sheets from manifest
-            manifest = manager.load_manifest(manifest_path)
-            if manifest is None:
-                raise ValueError(f"Manifest file '{manifest_path}' does not exist.")
-            
             builder = SheetBuilder(manifest, regenerate_tiles=args.regenerate_tiles)
             builder.run()
             print(f"Built sheets from manifest: {manifest_path}")
-            return
 
-        # Normal update operation
-        result_path = manager.update_manifest(manifest_path)
+        # Update and save manifest
+        result_path = manager.update_manifest(manifest_path, manifest=manifest)
         print(f"Updated manifest: {result_path}")
 
     except ValueError as e:
