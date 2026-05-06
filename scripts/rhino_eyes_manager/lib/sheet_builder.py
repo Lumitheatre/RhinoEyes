@@ -489,25 +489,26 @@ class SheetBuilder:
             if channel not in intermediate_paths:
                 raise ValueError(f"Missing {channel} channel for sheet {sheet_id}")
             merge_inputs.extend(["-i", str(intermediate_paths[channel])])
-
-        # mergeplanes command
-        # 0x001020 means: Y from input 0, U from input 1 (plane 0), V from input 2 (plane 0)
-        cmd = [
-            "ffmpeg", "-y", "-v", FFMPEG_LOG_LEVEL,
-            *merge_inputs,
-            "-filter_complex", "[0:v][1:v][2:v]mergeplanes=0x001020:yuv444p[out]",
-            "-map", "[out]",
-            "-c:v", "libx264",
-            "-preset", "medium",
-            "-crf", "18",
-            "-g", str(keyint),
-            "-keyint_min", str(keyint),
-            "-sc_threshold", "0",
-            "-pix_fmt", "yuv444p",
-            "-colorspace", "bt709",
-            "-color_range", "pc",
-            str(output_path)
-        ]
+            # 1. Use libx264rgb to stay in RGB color space
+            # 2. Use gbrp (Planar RGB) - Plane order: 0=Green, 1=Blue, 2=Red
+            # 3. Correct the mapping:
+            #    Out P0 (Green) = Input 1 (G)
+            #    Out P1 (Blue)  = Input 2 (B)
+            #    Out P3 (Red)   = Input 0 (R)
+            cmd = [
+                "ffmpeg", "-y", "-v", FFMPEG_LOG_LEVEL,
+                *merge_inputs,
+                "-filter_complex", "[0:v][1:v][2:v]mergeplanes=mapping=0x102000:format=gbrp[out]",
+                "-map", "[out]",
+                "-c:v", "libx264rgb",  # Switch to RGB encoder
+                "-preset", "medium",
+                "-crf", "18",
+                "-g", str(keyint),
+                "-keyint_min", str(keyint),
+                "-sc_threshold", "0",
+                "-pix_fmt", "gbrp",    # Ensures the encoder stays in planar RGB
+                str(output_path)
+            ]
 
         result = subprocess.run(cmd, capture_output=True, text=True)
         if result.returncode != 0:
