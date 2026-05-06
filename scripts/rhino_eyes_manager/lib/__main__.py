@@ -17,16 +17,17 @@ def main():
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
-  %(prog)s manage eye_manifest.cfg                                    # Update existing manifest
-  %(prog)s manage -u ./clips eye_manifest.cfg                         # Generate/update from clips
-  %(prog)s manage -u ./clips -d eye_manifest.cfg                      # Generate/update from clips and delete missing
-  %(prog)s manage --reallocate-clips-to-sheets eye_manifest.cfg       # Reallocate clips to sheets
-  %(prog)s init new_manifest.cfg                                      # Create a blank manifest
-  %(prog)s init -u ./clips new_manifest.cfg                           # Create manifest from clips
-  %(prog)s migrate old_manifest.cfg                                   # Migrate old manifest format
-  %(prog)s build-sheets eye_manifest.cfg                              # Build sheets from manifest
-  %(prog)s build-sheets --regenerate-tiles eye_manifest.cfg           # Build sheets, regenerating tiles
-        """,
+  %(prog)s manage eye_manifest.cfg                                         # Update existing manifest
+  %(prog)s manage -u ./clips eye_manifest.cfg                              # Generate/update from clips
+  %(prog)s manage -u ./clips -d eye_manifest.cfg                           # Generate/update from clips and delete missing
+  %(prog)s manage --reallocate-clips-to-sheets eye_manifest.cfg            # Reallocate clips to sheets
+  %(prog)s init new_manifest.cfg                                           # Create a blank manifest
+  %(prog)s init -u ./clips new_manifest.cfg                                # Create manifest from clips
+  %(prog)s migrate old_manifest.cfg                                        # Migrate old manifest format
+  %(prog)s build-sheets eye_manifest.cfg                                   # Build sheets from manifest
+  %(prog)s build-sheets --regenerate-tiles eye_manifest.cfg                # Build sheets, regenerating tiles
+  %(prog)s build-sheets --regenerate-channel-grids eye_manifest.cfg        # Build sheets, regenerating channel grids
+  """,
     )
 
     # Add global flags (before subparsers)
@@ -116,6 +117,11 @@ Examples:
         "--regenerate-tiles",
         action="store_true",
         help="Recreate all tiles even if they already exist. Without this flag, existing tiles are skipped.",
+    )
+    build_sheets_parser.add_argument(
+        "--regenerate-channel-grids",
+        action="store_true",
+        help="Regenerate intermediate channel grid files (R, G, B) even if they exist. Useful for changing encoding parameters.",
     )
 
     args = parser.parse_args()
@@ -243,7 +249,11 @@ def _handle_build_sheets(manager, manifest_path, args):
     print("Loaded manifest")
 
     # Build sheets from manifest
-    builder = SheetBuilder(manifest, regenerate_tiles=args.regenerate_tiles)
+    builder = SheetBuilder(
+        manifest, 
+        regenerate_tiles=args.regenerate_tiles,
+        regenerate_channel_grids=args.regenerate_channel_grids
+    )
     builder.run()
     print(f"Built sheets from manifest: {manifest_path}")
 

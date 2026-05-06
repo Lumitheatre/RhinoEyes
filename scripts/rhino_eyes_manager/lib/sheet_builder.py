@@ -38,12 +38,13 @@ class SheetBuilder:
     By default, rerunning the script will skip existing tiles. Use regenerate_tiles=True to recreate them.
     """
 
-    def __init__(self, config, regenerate_tiles=False):
+    def __init__(self, config, regenerate_tiles=False, regenerate_channel_grids=False):
         """Initialize SheetBuilder with a parsed ConfigParser object.
 
         Args:
             config: A configparser.ConfigParser object containing the manifest configuration.
             regenerate_tiles: If True, recreate all tiles. If False (default), skip existing tiles.
+            regenerate_channel_grids: If True, regenerate intermediate channel grids. If False (default), skip existing grids.
         """
         if not isinstance(config, configparser.ConfigParser):
             raise TypeError("config must be a configparser.ConfigParser object")
@@ -52,6 +53,7 @@ class SheetBuilder:
         self.sheets = {}
         self.actors = []
         self.regenerate_tiles = regenerate_tiles
+        self.regenerate_channel_grids = regenerate_channel_grids
 
     def get_sheet_tiles_dir(self, sheet_path: str) -> Path:
         """Get the tiles directory for a sheet based on its output path.
@@ -229,11 +231,86 @@ class SheetBuilder:
 
         return output_path, clip['uid']
 
-    def build_sheet(self, sheet_id, tiles_dir: Path, tile_resolution=(420,270), grid=(8,8), duration=30):
+    @staticmethod
+    def _build_channel_grid(
+        channel,
+        tiles_for_channel,
+        intermediate_path,
+        layout,
+        keyint,
+        sheet_id
+    ):  
+        """Build a single channel grid as an intermediate file.
+        
+        This method is designed to be run in parallel with other channel builds.
+        
+        Args:
+            channel: Channel identifier ('R', 'G', or 'B')
+            tiles_for_channel: List of tile paths for this channel
+            intermediate_path: Output path for the intermediate file
+            layout: FFmpeg xstack layout string
+            keyint: Keyframe interval
+            sheet_id: Sheet identifier for error messages
+            
+        Returns:
+            Path to the created intermediate file
+            
+        Raises:
+            subprocess.CalledProcessError: If FFmpeg encoding fails
+        """
+        # Build inputs list
+        inputs = []
+        for tile_path in tiles_for_channel:
+            inputs.extend(["-i", str(tile_path)])
+
+        # Build xstack filter with desaturation
+        input_labels = ""
+        filter_parts = []
+        for tile_idx in range(len(tiles_for_channel)):
+            desaturated_label = f"[d{tile_idx}]"
+            filter_parts.append(f"[{tile_idx}:v]hue=s=0{desaturated_label}")
+            input_labels += desaturated_label
+
+        # Create xstack and format to grayscale
+        filter_parts.append(f"{input_labels}xstack=inputs={len(tiles_for_channel)}:layout={layout}[v]")
+        filter_parts.append("[v]format=gray[out]")
+
+        filter_complex = ";".join(filter_parts)
+
+        # Encode to near-lossless intermediate using ultrafast preset
+        cmd = [
+            "ffmpeg", "-y", "-v", FFMPEG_LOG_LEVEL,
+            *inputs,
+            "-filter_complex", filter_complex,
+            "-map", "[out]",
+            "-c:v", "libx264",
+            "-preset", "ultrafast",
+            "-crf", "10",
+            "-pix_fmt", "gray",
+            "-x264-params", f"keyint={keyint}",
+            str(intermediate_path)
+        ]
+
+        result = subprocess.run(cmd, capture_output=True, text=True)
+        if result.returncode != 0:
+            error_msg = (
+                f"Error building {channel} channel grid for sheet {sheet_id}:\n"
+                f"Output path: {intermediate_path}\n"
+                f"Error output: {result.stderr}"
+            )
+            raise subprocess.CalledProcessError(result.returncode, cmd, result.stdout, result.stderr)
+        
+        return intermediate_path
+
+    def build_sheet(self, sheet_id, tiles_dir: Path, tile_resolution=(420,270), grid=(8,8), duration=30, fps=30):
         """Step 2: Pack tiles into R, G, B channels of a 4K file with channel multiplexing.
 
-        Each channel is an independent 8x8 grid of tiles. The final output merges all
-        channels into a single yuva444p video file.
+        Uses a two-stage build process:
+        1. Build intermediate channel grids (R, G, B) in parallel using lossless encoding
+        2. Merge the channel grids into final output using mergeplanes
+
+        This approach is faster, more memory efficient, and produces better quality output
+        than the previous single-stage approach.
 
         Args:
             sheet_id: The ID of the sheet to build.
@@ -241,6 +318,7 @@ class SheetBuilder:
             tile_resolution: Tuple of (width, height) for individual tiles (strings or integers).
             grid: Tuple of (grid_width, grid_height) for the sheet layout.
             duration: Duration of the sheet in seconds.
+            fps: Frames per second for the output video.
         """
         sheet_data = self.sheets[sheet_id]
         clips = sheet_data["clips"]
@@ -268,20 +346,17 @@ class SheetBuilder:
 
         # Create "Black" tile for missing slots
         black_tile = tiles_dir / "black.mov"
-        cmd = [
-            "ffmpeg", "-y", "-f", "lavfi", "-i", f"color=c=black:s={'x'.join(tile_res_str)}:d={duration}",
-            "-c:v", "prores_ks", str(black_tile)
-        ]
-        result = subprocess.run(cmd, capture_output=True, text=True)
-        if result.returncode != 0:
-            print(f"\nError creating black tile for Sheet {sheet_id}:")
-            print(f"Command: {' '.join(cmd)}")
-            print(f"Error output: {result.stderr}")
-            raise subprocess.CalledProcessError(result.returncode, cmd, result.stdout, result.stderr)
-
-        # Build FFmpeg command with channel support
-        inputs = []
-        filter_parts = []
+        if not black_tile.exists():
+            cmd = [
+                "ffmpeg", "-y", "-f", "lavfi", "-i", f"color=c=black:s={'x'.join(tile_res_str)}:d={duration}",
+                "-c:v", "prores_ks", str(black_tile)
+            ]
+            result = subprocess.run(cmd, capture_output=True, text=True)
+            if result.returncode != 0:
+                print(f"\nError creating black tile for Sheet {sheet_id}:")
+                print(f"Command: {' '.join(cmd)}")
+                print(f"Error output: {result.stderr}")
+                raise subprocess.CalledProcessError(result.returncode, cmd, result.stdout, result.stderr)
 
         # Process only RGB channels (skip A)
         active_channels = sorted([ch for ch in channels_dict.keys() if ch in ['R', 'G', 'B']])
@@ -294,82 +369,108 @@ class SheetBuilder:
         # Layout string for grid positioning
         layout = "|".join([f"{(i % grid_w) * tile_w_int}_{(i // grid_w) * tile_h_int}" for i in range(num_slots_per_channel)])
 
-        current_input_idx = 0
-        channel_labels = []
+        # Calculate keyint based on fps (2 seconds worth of frames)
+        keyint = fps * 2
 
-        # Build xstack for each channel
+        # === STAGE 1: Build intermediate channel grids in parallel ===
+        print(f"--- Stage 1: Building channel grids for {output_path.name} ---")
+        
+        intermediate_dir = tiles_dir / "_intermediates"
+        intermediate_dir.mkdir(exist_ok=True)
+        
+        intermediate_paths = {}
+        
+        # Collect channels that need to be built
+        channels_to_build = []
         for channel in rgb_channels:
-            tiles_for_channel = channels_dict.get(channel, [None] * num_slots_per_channel)
+            intermediate_path = intermediate_dir / f"channel_{channel}.mp4"
+            intermediate_paths[channel] = intermediate_path
+            
+            # Skip if exists and regeneration not requested
+            if intermediate_path.exists() and not self.regenerate_channel_grids:
+                print(f"  Using existing {channel} channel grid: {intermediate_path.name}")
+            else:
+                channels_to_build.append(channel)
+        
+        # Build channels in parallel using the global executor
+        if channels_to_build:
+            from concurrent.futures import as_completed
+            
+            executor = get_global_executor()
+            channel_futures = {}
+            
+            for channel in channels_to_build:
+                tiles_for_channel = channels_dict.get(channel, [None] * num_slots_per_channel)
+                # Ensure all slots are filled (use black tile for empty slots)
+                tiles_for_channel = [t if t else black_tile for t in tiles_for_channel]
+                
+                intermediate_path = intermediate_paths[channel]
+                
+                # Submit the channel grid build job
+                future = executor.submit(
+                    self._build_channel_grid,
+                    channel,
+                    tiles_for_channel,
+                    intermediate_path,
+                    layout,
+                    keyint,
+                    sheet_id
+                )
+                channel_futures[future] = channel
+            
+            # Wait for all channel grids to complete
+            print(f"  Encoding {len(channels_to_build)} channel grid(s) in parallel...")
+            for future in as_completed(channel_futures):
+                channel = channel_futures[future]
+                try:
+                    result_path = future.result()
+                    print(f"  ✓ {channel} channel grid complete: {result_path.name}")
+                except Exception as e:
+                    print(f"\nError building {channel} channel grid for sheet {sheet_id}:")
+                    print(f"Exception: {e}")
+                    raise
 
-            # Ensure all slots are filled (use black tile for empty slots)
-            tiles_for_channel = [t if t else black_tile for t in tiles_for_channel]
+        # === STAGE 2: Merge channel grids into final output ===
+        print(f"--- Stage 2: Merging channels for {output_path.name} ---")
 
-            input_labels = ""
-            for tile_idx, tile_path in enumerate(tiles_for_channel):
-                inputs.extend(["-i", str(tile_path)])
-                # Desaturate each tile to monochrome before xstacking
-                desaturated_label = f"[desat_{channel}_{tile_idx}]"
-                filter_parts.append(f"[{current_input_idx}:v]hue=s=0{desaturated_label}")
-                input_labels += desaturated_label
-                current_input_idx += 1
+        if len(rgb_channels) != 3:
+            raise ValueError(
+                f"Unsupported channel configuration for Sheet {sheet_id}: {rgb_channels}. "
+                f"All three R, G, B channels are required for mergeplanes."
+            )
 
-            # Create xstack filter for this channel
-            channel_label = f"[ch_{channel}]"
-            filter_parts.append(f"{input_labels}xstack=inputs={len(tiles_for_channel)}:layout={layout}{channel_label}")
-            channel_labels.append(channel_label)
+        # Build inputs for mergeplanes (must be in R, G, B order)
+        merge_inputs = []
+        for channel in ['R', 'G', 'B']:
+            if channel not in intermediate_paths:
+                raise ValueError(f"Missing {channel} channel for sheet {sheet_id}")
+            merge_inputs.extend(["-i", str(intermediate_paths[channel])])
 
-        # Merge channels into RGB planes
-        # Each desaturated (monochrome) channel grid should be packed into its respective RGB channel
-        # Strategy: map the grayscale value to only R, G, or B component
-
-        if len(rgb_channels) == 3:
-            # For each desaturated channel, map its luminance to the appropriate RGB channel
-            isolated_labels = []
-
-            for channel in rgb_channels:
-                ch_label = channel_labels[rgb_channels.index(channel)]
-                isolated_label = f"[iso_{channel}]"
-
-                if channel == 'R':
-                    # Map grayscale to red channel only (G=0, B=0)
-                    filter_parts.append(f"{ch_label}colorchannelmixer=rr=1:rg=1:rb=1:gr=0:gg=0:gb=0:br=0:bg=0:bb=0{isolated_label}")
-                elif channel == 'G':
-                    # Map grayscale to green channel only (R=0, B=0)
-                    filter_parts.append(f"{ch_label}colorchannelmixer=rr=0:rg=0:rb=0:gr=1:gg=1:gb=1:br=0:bg=0:bb=0{isolated_label}")
-                elif channel == 'B':
-                    # Map grayscale to blue channel only (R=0, G=0)
-                    filter_parts.append(f"{ch_label}colorchannelmixer=rr=0:rg=0:rb=0:gr=0:gg=0:gb=0:br=1:bg=1:bb=1{isolated_label}")
-
-                isolated_labels.append(isolated_label)
-
-            # Blend all three isolated channels together using addition
-            # [iso_R][iso_G]blend -> [temp1]
-            filter_parts.append(f"{isolated_labels[0]}{isolated_labels[1]}blend=all_mode=addition[temp1]")
-            # [temp1][iso_B]blend -> [out]
-            filter_parts.append(f"[temp1]{isolated_labels[2]}blend=all_mode=addition[out]")
-        else:
-            raise ValueError(f"Unsupported channel configuration for Sheet {sheet_id}: {rgb_channels}. Only R, G, B channels are supported.")
-
-        # Build complete FFmpeg command
-        print(f"--- Encoding Sheet: {output_path.name} ---")
-
+        # mergeplanes command
+        # 0x001020 means: Y from input 0, U from input 1 (plane 0), V from input 2 (plane 0)
         cmd = [
             "ffmpeg", "-y", "-v", FFMPEG_LOG_LEVEL,
-            *inputs,
-            "-filter_complex", ";".join(filter_parts),
+            *merge_inputs,
+            "-filter_complex", "[0:v][1:v][2:v]mergeplanes=0x001020:yuv444p[out]",
             "-map", "[out]",
-            '-c:v', 'libx264',
-            '-crf', '18',
-            '-pix_fmt', 'yuv444p',
+            "-c:v", "libx264",
+            "-preset", "medium",
+            "-crf", "18",
+            "-pix_fmt", "yuv444p",
+            "-colorspace", "bt709",
+            "-color_range", "pc",
             str(output_path)
         ]
 
+        print("  Merging RGB channels into final output...")
         result = subprocess.run(cmd, capture_output=True, text=True)
         if result.returncode != 0:
-            print(f"\nError building sheet {sheet_id}:")
+            print(f"\nError merging channels for sheet {sheet_id}:")
             print(f"Output path: {output_path}")
             print(f"Error output: {result.stderr}")
             raise subprocess.CalledProcessError(result.returncode, cmd, result.stdout, result.stderr)
+
+        print(f"✓ Sheet built successfully: {output_path.name}")
 
     def normalize_all_tiles(self, console: Console) -> Dict[str, Path]:
         """Normalize all clips to tiles in parallel.
@@ -484,7 +585,8 @@ class SheetBuilder:
                 tiles_dir,
                 tile_resolution,
                 grid,
-                duration
+                duration,
+                fps
             )
 
             future_id = id(future)
