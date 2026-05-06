@@ -2,6 +2,7 @@ import json
 import math
 import subprocess
 import configparser
+import time
 from pathlib import Path
 from concurrent.futures import ProcessPoolExecutor, as_completed
 from typing import Dict, Optional
@@ -13,6 +14,9 @@ from .display import TileNormalizationDisplay, SpriteSheetDisplay
 
 # Global executor for normalizing clips across all sheets
 _global_executor: Optional[ProcessPoolExecutor] = None
+
+# Global display for sheet generation progress tracking
+_global_display: Optional[SpriteSheetDisplay] = None
 
 def get_global_executor() -> ProcessPoolExecutor:
     """Get or create the global executor for tile normalization.
@@ -31,6 +35,24 @@ def shutdown_global_executor() -> None:
     if _global_executor is not None:
         _global_executor.shutdown(wait=True)
         _global_executor = None
+
+def get_global_display() -> Optional[SpriteSheetDisplay]:
+    """Get the global display instance if it exists.
+
+    Returns:
+        The global SpriteSheetDisplay instance, or None if not set.
+    """
+    global _global_display
+    return _global_display
+
+def set_global_display(display: Optional[SpriteSheetDisplay]) -> None:
+    """Set the global display instance.
+
+    Args:
+        display: The SpriteSheetDisplay instance to use globally, or None to clear.
+    """
+    global _global_display
+    _global_display = display
 
 class SheetBuilder:
     """Builds sheets defined in the manifest based on manifest attributes. Does not modify the manifest itself, and uses it as a declarative source of truth for the sheet structure and clip metadata.
@@ -205,11 +227,11 @@ class SheetBuilder:
         # loop_offset is a factor between 0 and 1 representing the phase shift
         # 0 = no shift, 0.5 = start halfway through the loop
         loop_offset = float(clip.get("loop_offset", 0))
-        
+
         # Calculate the offset in seconds based on the loop phase
         # We shift by a fraction of one loop segment
         offset_secs = loop_offset * new_seg_dur
-        
+
         # Convert to frames for pixel-perfect alignment if needed
         offset_frames = round(offset_secs * fps)
         offset_secs = offset_frames / fps
@@ -248,11 +270,11 @@ class SheetBuilder:
         layout,
         keyint,
         sheet_id
-    ):  
+    ):
         """Build a single channel grid as an intermediate file.
-        
+
         This method is designed to be run in parallel with other channel builds.
-        
+
         Args:
             channel: Channel identifier ('R', 'G', or 'B')
             tiles_for_channel: List of tile paths for this channel
@@ -260,10 +282,10 @@ class SheetBuilder:
             layout: FFmpeg xstack layout string
             keyint: Keyframe interval
             sheet_id: Sheet identifier for error messages
-            
+
         Returns:
             Path to the created intermediate file
-            
+
         Raises:
             subprocess.CalledProcessError: If FFmpeg encoding fails
         """
@@ -296,6 +318,9 @@ class SheetBuilder:
             "-preset", "ultrafast",
             "-crf", "10",
             "-pix_fmt", "gray",
+            "-g", str(keyint),
+            "-keyint_min", str(keyint),
+            "-sc_threshold", "0",
             "-x264-params", f"keyint={keyint}",
             str(intermediate_path)
         ]
@@ -307,8 +332,8 @@ class SheetBuilder:
                 f"Output path: {intermediate_path}\n"
                 f"Error output: {result.stderr}"
             )
-            raise subprocess.CalledProcessError(result.returncode, cmd, result.stdout, result.stderr)
-        
+            raise RuntimeError(error_msg)
+
         return intermediate_path
 
     def build_sheet(self, sheet_id, tiles_dir: Path, tile_resolution=(420,270), grid=(8,8), duration=30, fps=30):
@@ -378,43 +403,42 @@ class SheetBuilder:
         # Layout string for grid positioning
         layout = "|".join([f"{(i % grid_w) * tile_w_int}_{(i // grid_w) * tile_h_int}" for i in range(num_slots_per_channel)])
 
-        # Calculate keyint based on fps (2 seconds worth of frames)
-        keyint = fps * 2
+        # Set keyint to fps
+        keyint = fps
 
         # === STAGE 1: Build intermediate channel grids in parallel ===
-        print(f"--- Stage 1: Building channel grids for {output_path.name} ---")
-        
         intermediate_dir = tiles_dir / "_intermediates"
         intermediate_dir.mkdir(exist_ok=True)
-        
+
         intermediate_paths = {}
-        
+
         # Collect channels that need to be built
         channels_to_build = []
         for channel in rgb_channels:
             intermediate_path = intermediate_dir / f"channel_{channel}.mp4"
             intermediate_paths[channel] = intermediate_path
-            
+
             # Skip if exists and regeneration not requested
             if intermediate_path.exists() and not self.regenerate_channel_grids:
-                print(f"  Using existing {channel} channel grid: {intermediate_path.name}")
+                # Silently use existing - no need to log
+                pass
             else:
                 channels_to_build.append(channel)
-        
+
         # Build channels in parallel using the global executor
+        channel_futures = {}
         if channels_to_build:
             from concurrent.futures import as_completed
-            
+
             executor = get_global_executor()
-            channel_futures = {}
-            
+
             for channel in channels_to_build:
                 tiles_for_channel = channels_dict.get(channel, [None] * num_slots_per_channel)
                 # Ensure all slots are filled (use black tile for empty slots)
                 tiles_for_channel = [t if t else black_tile for t in tiles_for_channel]
-                
+
                 intermediate_path = intermediate_paths[channel]
-                
+
                 # Submit the channel grid build job
                 future = executor.submit(
                     self._build_channel_grid,
@@ -425,23 +449,34 @@ class SheetBuilder:
                     keyint,
                     sheet_id
                 )
-                channel_futures[future] = channel
-            
+                channel_futures[future] = {
+                    'channel': channel,
+                    'path': intermediate_path,
+                    'sheet_id': sheet_id
+                }
+
+                # Register with global display if available
+                display = get_global_display()
+                if display is not None:
+                    future_id = id(future)
+                    display.start_channel_job(future_id, sheet_id, channel, intermediate_path)
+                    display.register_channel_future(future_id, future)
+
             # Wait for all channel grids to complete
-            print(f"  Encoding {len(channels_to_build)} channel grid(s) in parallel...")
             for future in as_completed(channel_futures):
-                channel = channel_futures[future]
                 try:
-                    result_path = future.result()
-                    print(f"  ✓ {channel} channel grid complete: {result_path.name}")
+                    future.result()  # Actually wait for and get the result
+                    # Mark channel job as complete in display
+                    display = get_global_display()
+                    if display is not None:
+                        display.complete_channel_job(id(future))
                 except Exception as e:
-                    print(f"\nError building {channel} channel grid for sheet {sheet_id}:")
-                    print(f"Exception: {e}")
+                    display = get_global_display()
+                    if display is not None:
+                        display.complete_channel_job(id(future))
                     raise
 
         # === STAGE 2: Merge channel grids into final output ===
-        print(f"--- Stage 2: Merging channels for {output_path.name} ---")
-
         if len(rgb_channels) != 3:
             raise ValueError(
                 f"Unsupported channel configuration for Sheet {sheet_id}: {rgb_channels}. "
@@ -465,21 +500,21 @@ class SheetBuilder:
             "-c:v", "libx264",
             "-preset", "medium",
             "-crf", "18",
+            "-g", str(keyint),
+            "-keyint_min", str(keyint),
+            "-sc_threshold", "0",
             "-pix_fmt", "yuv444p",
             "-colorspace", "bt709",
             "-color_range", "pc",
             str(output_path)
         ]
 
-        print("  Merging RGB channels into final output...")
         result = subprocess.run(cmd, capture_output=True, text=True)
         if result.returncode != 0:
             print(f"\nError merging channels for sheet {sheet_id}:")
             print(f"Output path: {output_path}")
             print(f"Error output: {result.stderr}")
             raise subprocess.CalledProcessError(result.returncode, cmd, result.stdout, result.stderr)
-
-        print(f"✓ Sheet built successfully: {output_path.name}")
 
     def normalize_all_tiles(self, console: Console) -> Dict[str, Path]:
         """Normalize all clips to tiles in parallel.
@@ -571,51 +606,55 @@ class SheetBuilder:
         # Create display for sheet generation
         display = SpriteSheetDisplay(len(self.sheets), console)
 
-        # Get global executor (reuse the same one)
-        executor = get_global_executor()
-
-        # Collect all futures
-        all_futures = {}
-
-        # Submit all sheet building jobs
-        for sid, data in self.sheets.items():
-            tiles_dir = sheet_tiles_dirs[sid]
-            num_tiles = len(data["clips"])
-
-            # Get sheet parameters
-            tile_resolution, grid, duration, fps = self.get_sheet_parameters(sid)
-
-            # Calculate resulting sprite sheet resolution
-            sheet_w, sheet_h = data["resolution"]
-
-            future = executor.submit(
-                self.build_sheet,
-                sid,
-                tiles_dir,
-                tile_resolution,
-                grid,
-                duration,
-                fps
-            )
-
-            future_id = id(future)
-            all_futures[future] = sid
-            display.start_job(future_id, sid, data["path"], num_tiles, tile_resolution, (sheet_w, sheet_h), fps)
-            display.register_future(future_id, future)
+        # Set as global display so build_sheet can access it
+        set_global_display(display)
 
         console.print(f"Building {len(self.sheets)} sprite sheets...\n")
 
         # Use Live display for progress tracking
         display.start_display()
         try:
-            for future in as_completed(all_futures):
+            # Build sheets sequentially (channel grids within each sheet are parallel)
+            for sid, data in self.sheets.items():
+                tiles_dir = sheet_tiles_dirs[sid]
+                num_tiles = len(data["clips"])
+
+                # Get sheet parameters
+                tile_resolution, grid, duration, fps = self.get_sheet_parameters(sid)
+
+                # Calculate resulting sprite sheet resolution
+                sheet_w, sheet_h = data["resolution"]
+
+                # Create a pseudo-future ID for display tracking
+                pseudo_future_id = id(sid)  # Use sheet_id's id as a unique identifier
+
+                # Register sheet job with display
+                display.start_job(pseudo_future_id, sid, data["path"], num_tiles, tile_resolution, (sheet_w, sheet_h), fps)
+
+                # Mark as "running" immediately since we're executing it now
+                if pseudo_future_id in display.in_progress:
+                    display.in_progress[pseudo_future_id]["actual_start_recorded"] = True
+                    display.start_times[pseudo_future_id] = time.time()
+
                 try:
-                    future.result()
-                    display.complete_job(id(future))
+                    # Build the sheet (this will handle channel parallelism internally)
+                    self.build_sheet(
+                        sid,
+                        tiles_dir,
+                        tile_resolution,
+                        grid,
+                        duration,
+                        fps
+                    )
+                    display.complete_job(pseudo_future_id)
                 except Exception as e:
-                    display.print_error(f"Sheet {all_futures[future]}", e)
+                    display.complete_job(pseudo_future_id)
+                    display.print_error(f"Sheet {sid}", e)
+                    raise
         finally:
             display.stop_display()
+            # Clear global display
+            set_global_display(None)
 
         # Print summary
         console.print(display.print_summary())
