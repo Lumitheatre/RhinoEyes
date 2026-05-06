@@ -200,10 +200,19 @@ class SheetBuilder:
         # If we want to fit 10s into 5s, factor is 0.5 (Speed Up)
         speed_factor = new_seg_dur / orig_dur
 
-        # 3. Random Phase Shift (frames)
-        # We shift by frames rather than seconds for pixel-perfect alignment
-        rand_offset_frames = 0 # random.randint(0, frames_per_segment - 1)
-        rand_offset_secs = rand_offset_frames / fps
+        # 3. Loop Phase Shift based on loop_offset
+        # Get loop_offset from clip (default to 0 if not present)
+        # loop_offset is a factor between 0 and 1 representing the phase shift
+        # 0 = no shift, 0.5 = start halfway through the loop
+        loop_offset = float(clip.get("loop_offset", 0))
+        
+        # Calculate the offset in seconds based on the loop phase
+        # We shift by a fraction of one loop segment
+        offset_secs = loop_offset * new_seg_dur
+        
+        # Convert to frames for pixel-perfect alignment if needed
+        offset_frames = round(offset_secs * fps)
+        offset_secs = offset_frames / fps
 
         # 4. The "Seam-Free" Filter Chain
         # We apply FPS *after* the speed change to "bake" the frames into the new speed.
@@ -212,7 +221,7 @@ class SheetBuilder:
             f"[v_scaled]setpts={speed_factor}*PTS[v_sped]",
             f"[v_sped]fps={fps}:round=near[v_fixed_fps]", # Bake the frames here
             f"[v_fixed_fps]loop=loop={loop_count + 1}:size={frames_per_segment}:start=0[v_looped]",
-            f"[v_looped]trim=start={rand_offset_secs}:duration={target_duration},setpts=PTS-STARTPTS[v_final]"
+            f"[v_looped]trim=start={offset_secs}:duration={target_duration},setpts=PTS-STARTPTS[v_final]"
         ]
 
         cmd = [

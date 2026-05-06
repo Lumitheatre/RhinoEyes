@@ -21,6 +21,7 @@ Examples:
   %(prog)s manage -u ./clips eye_manifest.cfg                              # Generate/update from clips
   %(prog)s manage -u ./clips -d eye_manifest.cfg                           # Generate/update from clips and delete missing
   %(prog)s manage --reallocate-clips-to-sheets eye_manifest.cfg            # Reallocate clips to sheets
+  %(prog)s manage --regenerate-loop-offset eye_manifest.cfg                # Regenerate loop offsets
   %(prog)s init new_manifest.cfg                                           # Create a blank manifest
   %(prog)s init -u ./clips new_manifest.cfg                                # Create manifest from clips
   %(prog)s migrate old_manifest.cfg                                        # Migrate old manifest format
@@ -70,6 +71,11 @@ Examples:
         "--reallocate-clips-to-sheets",
         action="store_true",
         help="Destructively clear all clip-to-sheet assignments and reallocate from scratch.",
+    )
+    manage_parser.add_argument(
+        "--regenerate-loop-offset",
+        action="store_true",
+        help="Regenerate loop_offset values for all clips with new random values between 0 and 1.",
     )
 
     # === INIT command ===
@@ -230,6 +236,11 @@ def _handle_manage(manager, manifest_path, args):
     )
     operation = "Reallocated" if args.reallocate_clips_to_sheets else "Allocated"
     print(f"{operation} clips to sheets")
+
+    # Regenerate loop offsets if requested
+    if args.regenerate_loop_offset:
+        print("Regenerating loop_offset values...")
+        manager.regenerate_loop_offsets(manifest)
 
     # Update and save manifest
     result_path = manager.update_manifest(manifest_path, manifest=manifest)

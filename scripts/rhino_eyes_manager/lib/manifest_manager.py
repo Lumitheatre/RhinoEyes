@@ -2,6 +2,7 @@
 
 import configparser
 import json
+import random
 from pathlib import Path
 from typing import List, Optional
 
@@ -417,6 +418,48 @@ class ManifestManager:
                     except json.JSONDecodeError:
                         pass
 
+    def initialize_loop_offsets(self, manifest: configparser.ConfigParser) -> None:
+        """
+        Initialize missing loop_offset fields in entries with random values between 0 and 1.
+        Only adds loop_offset if it doesn't already exist.
+
+        Modifies manifest in place.
+        """
+        modified = False
+        for section in manifest.sections():
+            if section.startswith(f"{ACTOR_NS}:"):
+                if manifest.has_option(section, "clips"):
+                    clips_str = manifest.get(section, "clips")
+                    try:
+                        clips = json.loads(clips_str)
+                        for entry in clips:
+                            if "loop_offset" not in entry:
+                                entry["loop_offset"] = f"{random.random():.2f}"
+                                modified = True
+                        if modified:
+                            manifest.set(section, "clips", json.dumps(clips, indent=2, separators=(", ", ": ")))
+                    except json.JSONDecodeError:
+                        pass
+
+    def regenerate_loop_offsets(self, manifest: configparser.ConfigParser) -> None:
+        """
+        Regenerate loop_offset values for all entries with new random values between 0 and 1.
+        Overwrites existing loop_offset values.
+
+        Modifies manifest in place.
+        """
+        for section in manifest.sections():
+            if section.startswith(f"{ACTOR_NS}:"):
+                if manifest.has_option(section, "clips"):
+                    clips_str = manifest.get(section, "clips")
+                    try:
+                        clips = json.loads(clips_str)
+                        for entry in clips:
+                            entry["loop_offset"] = f"{random.random():.2f}"
+                        manifest.set(section, "clips", json.dumps(clips, indent=2, separators=(", ", ": ")))
+                    except json.JSONDecodeError:
+                        pass
+
     def sync_manifest_from_clips(
         self, clip_dir: str, manifest: configparser.ConfigParser, delete_absent: bool = False
     ) -> None:
@@ -535,6 +578,7 @@ class ManifestManager:
         This applies all structural and content updates:
         - Assigns UIDs to entries that don't have one
         - Initializes missing entry fields with defaults
+        - Initializes missing loop_offset values
         - Sorts entries consistently
 
         Args:
@@ -556,6 +600,7 @@ class ManifestManager:
         # Apply management operations
         self.assign_uids(manifest)
         self.initialize_entry_fields(manifest)
+        self.initialize_loop_offsets(manifest)
         self.sort_entries(manifest)
 
         # Save the updated manifest
