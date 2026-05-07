@@ -9,4 +9,4 @@ SHEET_NS = "sheet"
 
 # Sheet Builder Constants
 FFMPEG_LOG_LEVEL = "error"  # Change to "info" for debugging
-MAX_WORKERS = 5  # Maximum number of parallel tile normalization jobs
+MAX_WORKERS = 10  # Maximum number of parallel tile normalization jobs
