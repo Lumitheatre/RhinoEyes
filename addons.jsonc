@@ -14,7 +14,7 @@
       "source": "zip",
       "subfolder": "addons/ffmpeg"
     },
-    "vlc": {
+    "godot-vlc": {
       "url": "https://github.com/xiSage/godot-vlc/releases/download/v1.1.2/godot-vlc_v1.1.2.zip",
       "source": "zip",
       "subfolder": "addons/godot-vlc"
