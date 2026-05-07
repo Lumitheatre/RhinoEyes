@@ -3,6 +3,7 @@
 import argparse
 import sys
 from pathlib import Path
+from typing import Set
 
 from .manifest_manager import ManifestManager
 from .sheet_builder import SheetBuilder
@@ -24,8 +25,11 @@ Examples:
   %(prog)s init new_manifest.cfg                                      # Create a blank manifest
   %(prog)s init -u ./clips new_manifest.cfg                           # Create manifest from clips
   %(prog)s migrate old_manifest.cfg                                   # Migrate old manifest format
-  %(prog)s build-sheets eye_manifest.cfg                              # Build sheets from manifest
-  %(prog)s build-sheets --regenerate-tiles eye_manifest.cfg           # Build sheets, regenerating tiles
+  %(prog)s build-sheets eye_manifest.cfg                              # Build sheets from manifest (mtime-based incremental)
+  %(prog)s build-sheets --ignore-changed-tiles eye_manifest.cfg        # Incremental by existence only (no mtime checks)
+  %(prog)s build-sheets --regenerate-tiles blink_a.mov,blink_b.mov eye_manifest.cfg  # Force specific tiles, then rebuild affected sheets
+  %(prog)s build-sheets --regenerate-all eye_manifest.cfg              # Force regenerate all tiles and all sheets
+  %(prog)s build-sheets --parallel-sheet-encoding eye_manifest.cfg     # Encode multiple sheets in parallel
         """,
     )
 
@@ -119,13 +123,29 @@ Examples:
     )
     build_sheets_parser.add_argument(
         "--regenerate-tiles",
-        action="store_true",
-        help="Recreate all tiles even if they already exist. Without this flag, existing tiles are skipped.",
+        metavar="FILENAMES",
+        help=(
+            "Comma-separated list of *source* clip filenames to renormalize into tiles "
+            "(e.g. blink_a.mov,blink_b.mov). Only those tiles (and the sheets that depend on them) "
+            "will be regenerated."
+        ),
     )
     build_sheets_parser.add_argument(
-        "--seq-sheet-build",
+        "--ignore-changed-tiles",
         action="store_true",
-        help="Build sheets sequentially instead of in parallel. Use this if parallel building uses too many resources.",
+        help=(
+            "Disable modified-time dependency checks and only regenerate missing tiles/sheets (plus any explicitly forced via --regenerate-tiles/--regenerate-all)."
+        ),
+    )
+    build_sheets_parser.add_argument(
+        "--regenerate-all",
+        action="store_true",
+        help="Force regeneration of all tiles and all sheets (bulk rebuild).",
+    )
+    build_sheets_parser.add_argument(
+        "--parallel-sheet-encoding",
+        action="store_true",
+        help="Encode sheets in parallel instead of sequentially. Uses more CPU/RAM.",
     )
 
     args = parser.parse_args()
@@ -252,8 +272,24 @@ def _handle_build_sheets(manager, manifest_path, args):
 
     print("Loaded manifest")
 
+    def _parse_csv_filenames(value: str) -> Set[str]:
+        parts = [p.strip() for p in value.split(",")]
+        return {p.lower() for p in parts if p}
+
+    regenerate_tile_names = None
+    if args.regenerate_tiles:
+        regenerate_tile_names = _parse_csv_filenames(args.regenerate_tiles)
+        if not regenerate_tile_names:
+            raise ValueError("--regenerate-tiles was provided but no filenames were parsed")
+
     # Build sheets from manifest
-    builder = SheetBuilder(manifest, regenerate_tiles=args.regenerate_tiles, sequential=args.seq_sheet_build)
+    builder = SheetBuilder(
+        manifest,
+        regenerate_tiles=regenerate_tile_names,
+        ignore_changed_tiles=args.ignore_changed_tiles,
+        regenerate_all=args.regenerate_all,
+        sequential=not args.parallel_sheet_encoding,
+    )
     builder.run()
     print(f"Built sheets from manifest: {manifest_path}")
 

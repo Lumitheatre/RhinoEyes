@@ -4,7 +4,7 @@ import subprocess
 import configparser
 from pathlib import Path
 from concurrent.futures import ProcessPoolExecutor, as_completed
-from typing import Dict, Optional
+from typing import Dict, Optional, Set, List, Iterable, Tuple
 
 from rich.console import Console  # type: ignore
 
@@ -33,27 +33,60 @@ def shutdown_global_executor() -> None:
         _global_executor = None
 
 class SheetBuilder:
-    """Builds sheets defined in the manifest based on manifest attributes. Does not modify the manifest itself, and uses it as a declarative source of truth for the sheet structure and clip metadata.
+    """Builds sheets defined in the manifest based on manifest attributes.
 
-    By default, rerunning the script will skip existing tiles. Use regenerate_tiles=True to recreate them.
+    Pipeline:
+      1) Normalize source clips into per-sheet "tile" MOVs
+      2) Pack tiles into sprite sheet video files
+
+    This builder is dependency-aware:
+      - Tiles are regenerated only when needed (missing, explicitly forced, or source clip is newer)
+      - Sheets are regenerated only when needed (missing or any dependent tile is newer)
+
+    Bulk rebuilds are supported via `regenerate_all=True`.
     """
 
-    def __init__(self, config, regenerate_tiles=False, sequential=False):
+    def __init__(
+        self,
+        config,
+        regenerate_tiles: Optional[Set[str]] = None,
+        ignore_changed_tiles: bool = False,
+        regenerate_all: bool = False,
+        sequential: bool = True,
+    ):
         """Initialize SheetBuilder with a parsed ConfigParser object.
 
         Args:
             config: A configparser.ConfigParser object containing the manifest configuration.
-            regenerate_tiles: If True, recreate all tiles. If False (default), skip existing tiles.
-            sequential: If True, build sheets sequentially. If False (default), build in parallel.
+            regenerate_tiles: Optional set of *source clip filenames* (case-insensitive) to force-regenerate.
+                Matching is done against both the source filename (e.g. "blink.mov") and the stem (e.g. "blink").
+            ignore_changed_tiles: If True, disable modified-time dependency checks and only regenerate missing tiles/sheets
+                (plus any explicitly forced via regenerate_tiles/regenerate_all).
+            regenerate_all: If True, force regeneration of all tiles and all sheets.
+            sequential: If True (default), build sheets sequentially. If False, build in parallel.
         """
         if not isinstance(config, configparser.ConfigParser):
             raise TypeError("config must be a configparser.ConfigParser object")
 
         self.config = config
-        self.sheets = {}
-        self.actors = []
-        self.regenerate_tiles = regenerate_tiles
+        self.sheets: Dict[str, dict] = {}
+        self.actors: List[str] = []
+
+        # Regeneration behavior
+        self.regenerate_tiles: Set[str] = {s.strip().lower() for s in (regenerate_tiles or set()) if s.strip()}
+        self.ignore_changed_tiles = ignore_changed_tiles
+        self.regenerate_all = regenerate_all
         self.sequential = sequential
+
+        # For reporting: which forced tile names actually matched something in the manifest
+        self._matched_regenerate_tile_keys: Set[str] = set()
+
+        # Per-run stats (populated by `run()`)
+        self._last_tile_stats: Dict[str, int] = {}
+        self._last_sheet_stats: Dict[str, int] = {}
+
+        # Sheets impacted by tile normalization this run (used to force dependent sheet rebuild)
+        self._sheets_with_tile_work: Set[str] = set()
 
     def get_sheet_tiles_dir(self, sheet_path: str) -> Path:
         """Get the tiles directory for a sheet based on its output path.
@@ -141,7 +174,27 @@ class SheetBuilder:
 
         return tile_resolution, (grid_w, grid_h), duration, fps
 
-    def normalize_clip_to_sheet(self, clip, target_duration, output_dir, target_resolution, fps=30):
+    @staticmethod
+    def _mtime(path: Path) -> float:
+        """Safe mtime read; returns 0.0 if the file does not exist."""
+        try:
+            return path.stat().st_mtime
+        except FileNotFoundError:
+            return 0.0
+
+    def _clip_matches_regenerate_list(self, clip: dict) -> bool:
+        if not self.regenerate_tiles:
+            return False
+
+        src = Path(clip["path"])
+        keys = {src.name.lower(), src.stem.lower()}
+        hits = self.regenerate_tiles.intersection(keys)
+        if hits:
+            self._matched_regenerate_tile_keys.update(hits)
+            return True
+        return False
+
+    def normalize_clip_to_sheet(self, clip, target_duration, output_dir, target_resolution, fps=30, force: bool = False):
         """Take a full resolution clip, and produce a sheet tile at the expected resolution and of the expected duration, perfectly looped.
 
         Args:
@@ -164,8 +217,8 @@ class SheetBuilder:
         output_name = f"s{clip['sheet_id']}_slot{clip['sheet_slot']}_u{clip['uid']}.mov"
         output_path = output_dir / output_name
 
-        # Skip if tile exists and regenerate_tiles is False
-        if output_path.exists() and not self.regenerate_tiles:
+        # Skip if tile exists and we weren't asked/forced to rebuild it
+        if output_path.exists() and not force:
             return output_path, clip['uid']
 
         # 1. Get exact duration
@@ -330,109 +383,251 @@ class SheetBuilder:
             raise subprocess.CalledProcessError(result.returncode, cmd, result.stdout, result.stderr)
 
     def normalize_all_tiles(self, console: Console) -> Dict[str, Path]:
-        """Normalize all clips to tiles in parallel.
+        """Normalize clips into tiles (incremental).
 
-        Args:
-            console: Console instance for output.
+        Tiles are queued only when needed:
+          - missing tile output
+          - `regenerate_all` is set
+          - source filename matches `regenerate_tiles`
+          - (default) source clip is newer than the tile (mtime)
 
-        Returns:
-            Dictionary mapping sheet IDs to their tiles directories.
+        Set `ignore_changed_tiles=True` to disable the mtime check and use existence-only incremental behavior.
+
+        Returns a mapping of sheet_id -> tiles_dir for *all* sheets.
         """
-        # Calculate total clips across all sheets for display
+        # Reset per-run impact tracking
+        self._sheets_with_tile_work = set()
+
         total_clips_all = sum(len(data["clips"]) for data in self.sheets.values())
+
+        # Always compute tiles dirs so downstream sheet building can run even if there are no clips.
+        sheet_tiles_dirs: Dict[str, Path] = {
+            sid: self.get_sheet_tiles_dir(data["path"]) for sid, data in self.sheets.items()
+        }
 
         if total_clips_all == 0:
             console.print("[yellow]No clips to process[/yellow]")
-            return {}
+            self._last_tile_stats = {
+                "total": 0,
+                "up_to_date": 0,
+                "queued": 0,
+                "succeeded": 0,
+                "failed": 0,
+            }
+            return sheet_tiles_dirs
 
-        # Single display instance for all sheets
-        display = TileNormalizationDisplay(total_clips_all, console)
+        dirty_jobs: List[tuple] = []
+        up_to_date = 0
 
-        # Get global executor (will be created if not already exists)
-        executor = get_global_executor()
-
-        # Collect all futures and their metadata
-        all_futures = {}
-        sheet_tiles_dirs = {}  # Map to get tiles_dir from clip later
-
-        # Submit all normalization jobs for all sheets
         for sid, data in self.sheets.items():
-            console.print(f"Queuing clips for Sheet {sid}...")
-
-            # Get sheet-specific tiles directory
-            tiles_dir = self.get_sheet_tiles_dir(data['path'])
-            sheet_tiles_dirs[sid] = tiles_dir
-
-            # Get sheet parameters (tile resolution, grid, duration, fps)
-            target_res, grid, duration, fps = self.get_sheet_parameters(sid)
+            tiles_dir = sheet_tiles_dirs[sid]
+            target_res, _grid, duration, fps = self.get_sheet_parameters(sid)
 
             for c in data["clips"]:
-                # Pre-calculate output tile path for display
-                output_tile_filename = self.get_output_tile_filename(c)
-                output_tile_path = tiles_dir / output_tile_filename
+                output_tile_path = tiles_dir / self.get_output_tile_filename(c)
+                src_path = Path(c["path"])
 
-                future = executor.submit(
-                    self.normalize_clip_to_sheet,
-                    c,
-                    duration,
-                    tiles_dir,
-                    target_res,
-                    fps
+                force = False
+                if self.regenerate_all:
+                    force = True
+                elif self._clip_matches_regenerate_list(c):
+                    force = True
+                elif not output_tile_path.exists():
+                    force = True
+                elif not self.ignore_changed_tiles:
+                    # Default behavior: if the source is newer than the tile, the tile is dirty.
+                    # (If source doesn't exist, normalization will fail later anyway.)
+                    if self._mtime(src_path) > self._mtime(output_tile_path):
+                        force = True
+
+                if force:
+                    dirty_jobs.append((c, duration, tiles_dir, target_res, fps, output_tile_path))
+                else:
+                    up_to_date += 1
+
+        console.print(f"{up_to_date} tiles up to date")
+
+        if self.regenerate_tiles:
+            unmatched = self.regenerate_tiles.difference(self._matched_regenerate_tile_keys)
+            if unmatched:
+                console.print(
+                    "[yellow]Warning:[/yellow] --regenerate-tiles names not found in manifest: "
+                    + ", ".join(sorted(unmatched))
                 )
 
-                future_id = id(future)
-                all_futures[future] = c
-                display.start_job(future_id, c["uid"], c["sheet_id"], c["path"], str(output_tile_path))
-                display.register_future(future_id, future)
+        if not dirty_jobs:
+            console.print("0 tiles to normalize")
+            console.print()
 
-        console.print(f"\nProcessing {total_clips_all} clips across {len(self.sheets)} sheets...\n")
+            self._last_tile_stats = {
+                "total": total_clips_all,
+                "up_to_date": up_to_date,
+                "queued": 0,
+                "succeeded": 0,
+                "failed": 0,
+            }
 
-        # Use Live display for progress tracking
+            return sheet_tiles_dirs
+
+        console.print(f"{len(dirty_jobs)} tiles to normalize\n")
+
+        # Mark sheets impacted by tile work so we can force dependent sheet rebuild even when mtime checks are disabled.
+        self._sheets_with_tile_work = {str(job[0]["sheet_id"]) for job in dirty_jobs}
+
+        display = TileNormalizationDisplay(len(dirty_jobs), console)
+        executor = get_global_executor()
+
+        all_futures = {}
+        tiles_succeeded = 0
+        tiles_failed = 0
+
+        for (clip, duration, tiles_dir, target_res, fps, output_tile_path) in dirty_jobs:
+            future = executor.submit(
+                self.normalize_clip_to_sheet,
+                clip,
+                duration,
+                tiles_dir,
+                target_res,
+                fps,
+                True,
+            )
+
+            future_id = id(future)
+            all_futures[future] = clip
+            display.start_job(future_id, clip["uid"], clip["sheet_id"], clip["path"], str(output_tile_path))
+            display.register_future(future_id, future)
+
         display.start_display()
         try:
             for future in as_completed(all_futures):
                 try:
                     future.result()
-                    display.complete_job(id(future))
+                    tiles_succeeded += 1
                 except Exception as e:
-                    display.print_error(all_futures[future]['uid'], e)
+                    tiles_failed += 1
+                    display.print_error(all_futures[future]["uid"], e)
+                finally:
+                    # Always advance the progress counter so the display completes.
+                    display.complete_job(id(future))
         finally:
             display.stop_display()
 
-        # Print summary line only
         console.print(display.print_summary())
         console.print()
 
+        self._last_tile_stats = {
+            "total": total_clips_all,
+            "up_to_date": up_to_date,
+            "queued": len(dirty_jobs),
+            "succeeded": tiles_succeeded,
+            "failed": tiles_failed,
+        }
+
         return sheet_tiles_dirs
 
-    def build_all_sheets(self, sheet_tiles_dirs: Dict[str, Path], console: Console) -> None:
-        """Build all sprite sheets.
+    def _iter_expected_tile_paths(self, sheet_id: str, tiles_dir: Path) -> Iterable[Path]:
+        for clip in self.sheets[sheet_id]["clips"]:
+            yield tiles_dir / self.get_output_tile_filename(clip)
 
-        Args:
-            sheet_tiles_dirs: Dictionary mapping sheet IDs to their tiles directories.
-            console: Console instance for output.
+    def build_all_sheets(self, sheet_tiles_dirs: Dict[str, Path], console: Console) -> None:
+        """Build sprite sheets incrementally.
+
+        A sheet is considered dirty if:
+          - `regenerate_all` is set
+          - the sheet output file does not exist
+          - any expected tile does not exist
+          - (default) any expected tile is newer than the sheet output (mtime)
+          - any tile for that sheet was regenerated/queued in this run
+
+        Set `ignore_changed_tiles=True` to disable the mtime comparison and use existence-only incremental behavior.
         """
         if not self.sheets:
             console.print("[yellow]No sheets to build[/yellow]")
+            self._last_sheet_stats = {
+                "total": 0,
+                "up_to_date": 0,
+                "queued": 0,
+                "succeeded": 0,
+                "failed": 0,
+            }
             return
 
-        if self.sequential:
-            self._build_sheets_sequential(sheet_tiles_dirs, console)
-        else:
-            self._build_sheets_parallel(sheet_tiles_dirs, console)
+        dirty_sheet_ids: List[str] = []
+        up_to_date = 0
 
-    def _build_sheets_sequential(self, sheet_tiles_dirs: Dict[str, Path], console: Console) -> None:
+        for sid, data in self.sheets.items():
+            tiles_dir = sheet_tiles_dirs.get(sid) or self.get_sheet_tiles_dir(data["path"])
+            output_path = Path(data["path"])
+
+            if self.regenerate_all or not output_path.exists():
+                dirty_sheet_ids.append(sid)
+                continue
+
+            sheet_mtime = self._mtime(output_path)
+            expected_tiles = list(self._iter_expected_tile_paths(sid, tiles_dir))
+
+            missing_tile = any(not p.exists() for p in expected_tiles)
+            if missing_tile:
+                dirty_sheet_ids.append(sid)
+                continue
+
+            if sid in self._sheets_with_tile_work:
+                dirty_sheet_ids.append(sid)
+                continue
+
+            if not self.ignore_changed_tiles:
+                newest_tile_mtime = max((self._mtime(p) for p in expected_tiles), default=0.0)
+                if newest_tile_mtime > sheet_mtime:
+                    dirty_sheet_ids.append(sid)
+                    continue
+
+            up_to_date += 1
+
+        console.print(f"{up_to_date} sheets up to date")
+
+        if not dirty_sheet_ids:
+            console.print("0 sheets to build")
+            console.print()
+            self._last_sheet_stats = {
+                "total": len(self.sheets),
+                "up_to_date": up_to_date,
+                "queued": 0,
+                "succeeded": 0,
+                "failed": 0,
+            }
+            return
+
+        console.print(f"{len(dirty_sheet_ids)} sheets to build\n")
+
+        if self.sequential:
+            sheets_succeeded, sheets_failed = self._build_sheets_sequential(dirty_sheet_ids, sheet_tiles_dirs, console)
+        else:
+            sheets_succeeded, sheets_failed = self._build_sheets_parallel(dirty_sheet_ids, sheet_tiles_dirs, console)
+
+        self._last_sheet_stats = {
+            "total": len(self.sheets),
+            "up_to_date": up_to_date,
+            "queued": len(dirty_sheet_ids),
+            "succeeded": sheets_succeeded,
+            "failed": sheets_failed,
+        }
+
+    def _build_sheets_sequential(self, sheet_ids: List[str], sheet_tiles_dirs: Dict[str, Path], console: Console) -> Tuple[int, int]:
         """Build all sprite sheets sequentially.
 
         Args:
             sheet_tiles_dirs: Dictionary mapping sheet IDs to their tiles directories.
             console: Console instance for output.
         """
-        display = SpriteSheetDisplay(len(self.sheets), console)
+        display = SpriteSheetDisplay(len(sheet_ids), console)
         display.start_display()
 
+        sheets_succeeded = 0
+        sheets_failed = 0
+
         try:
-            for sid, data in self.sheets.items():
+            for sid in sheet_ids:
+                data = self.sheets[sid]
                 tiles_dir = sheet_tiles_dirs[sid]
                 num_tiles = len(data["clips"])
 
@@ -454,15 +649,20 @@ class SheetBuilder:
                         duration,
                         fps
                     )
-                    display.complete_job(future_id)
+                    sheets_succeeded += 1
                 except Exception as e:
+                    sheets_failed += 1
                     display.print_error(f"Sheet {sid}", e)
+                finally:
+                    # Always advance the progress counter so the display completes.
+                    display.complete_job(future_id)
         finally:
             display.stop_display()
 
         console.print()
+        return sheets_succeeded, sheets_failed
 
-    def _build_sheets_parallel(self, sheet_tiles_dirs: Dict[str, Path], console: Console) -> None:
+    def _build_sheets_parallel(self, sheet_ids: List[str], sheet_tiles_dirs: Dict[str, Path], console: Console) -> Tuple[int, int]:
         """Build all sprite sheets in parallel.
 
         Args:
@@ -470,7 +670,7 @@ class SheetBuilder:
             console: Console instance for output.
         """
         # Create display for sheet generation
-        display = SpriteSheetDisplay(len(self.sheets), console)
+        display = SpriteSheetDisplay(len(sheet_ids), console)
 
         # Get global executor (reuse the same one)
         executor = get_global_executor()
@@ -479,7 +679,8 @@ class SheetBuilder:
         all_futures = {}
 
         # Submit all sheet building jobs
-        for sid, data in self.sheets.items():
+        for sid in sheet_ids:
+            data = self.sheets[sid]
             tiles_dir = sheet_tiles_dirs[sid]
             num_tiles = len(data["clips"])
 
@@ -504,17 +705,25 @@ class SheetBuilder:
             display.start_job(future_id, sid, data["path"], num_tiles, tile_resolution, (sheet_w, sheet_h), fps)
             display.register_future(future_id, future)
 
-        console.print(f"Building {len(self.sheets)} sprite sheets...\n")
+        console.print(f"Building {len(sheet_ids)} sprite sheets...\n")
 
         # Use Live display for progress tracking
         display.start_display()
+
+        sheets_succeeded = 0
+        sheets_failed = 0
+
         try:
             for future in as_completed(all_futures):
                 try:
                     future.result()
-                    display.complete_job(id(future))
+                    sheets_succeeded += 1
                 except Exception as e:
+                    sheets_failed += 1
                     display.print_error(f"Sheet {all_futures[future]}", e)
+                finally:
+                    # Always advance the progress counter so the display completes.
+                    display.complete_job(id(future))
         finally:
             display.stop_display()
 
@@ -522,24 +731,36 @@ class SheetBuilder:
         console.print(display.print_summary())
         console.print()
 
+        return sheets_succeeded, sheets_failed
+
     def run(self):
         """Run the complete sheet building pipeline: parse, normalize tiles, build sheets."""
         self.parse_manifest()
         console = Console()
 
         try:
-            # Step 1: Normalize all tiles
+            # Step 1: Normalize tiles (incremental)
             sheet_tiles_dirs = self.normalize_all_tiles(console)
 
-            if not sheet_tiles_dirs:
-                return
-
-            # Step 2: Build all sheets
+            # Step 2: Build sheets (incremental)
             self.build_all_sheets(sheet_tiles_dirs, console)
+
+            # Job summary
+            tile = self._last_tile_stats
+            sheet = self._last_sheet_stats
+
+            console.print("[bold]Job Summary[/bold]")
+            console.print(
+                f"Tiles: {tile.get('succeeded', 0)} regenerated, {tile.get('up_to_date', 0)} up to date, {tile.get('failed', 0)} failed"
+            )
+            console.print(
+                f"Sheets: {sheet.get('succeeded', 0)} built, {sheet.get('up_to_date', 0)} up to date, {sheet.get('failed', 0)} failed"
+            )
+            console.print()
 
         finally:
             # Ensure executor is cleanly shutdown when all sheets are done
             shutdown_global_executor()
 
 if __name__ == "__main__":
-    raise RuntimeError("SheetBuilder must be called through rhino_eyes_manager CLI with --build-sheets flag")
+    raise RuntimeError("SheetBuilder must be called through rhino_eyes_manager CLI via the build-sheets command")
