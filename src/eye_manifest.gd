@@ -125,6 +125,7 @@ func get_actor_clips(actor_name: String) -> Array:
 ## Find a clip by actor, angle, and aggravation
 ## Finds the closest available angle for the given aggravation level
 ## Only returns enabled clips. Aggravation must match exactly.
+## Converts sheet_channel string to ChannelType enum value.
 func find_clip(actor_name: String, angle: int, aggravation: int) -> Dictionary:
 	var clips = actors.get(actor_name, [])
 	var closest_clip = {}
@@ -150,6 +151,12 @@ func find_clip(actor_name: String, angle: int, aggravation: int) -> Dictionary:
 		if angle_distance < closest_distance:
 			closest_distance = angle_distance
 			closest_clip = clip
+
+	# Convert sheet_channel string to enum value
+	if not closest_clip.is_empty() and closest_clip.has("sheet_channel"):
+		closest_clip["sheet_channel"] = ChannelType.from_string(str(closest_clip["sheet_channel"]))
+	else:
+		closest_clip["sheet_channel"] = ChannelType.Type.R
 
 	return closest_clip
 

@@ -5,6 +5,7 @@ uniform sampler2D video_texture : source_color, filter_linear;
 uniform vec2 uv_offset = vec2(0.0, 0.0);
 uniform vec2 uv_scale = vec2(0.125, 0.125); // Default to 1/8th for 8x8 grid
 uniform float tile_aspect_ratio = 1.0;
+uniform int sheet_channel = 0;  // Channel enum: 0=R, 1=G, 2=B
 
 // Film Aesthetic Controls
 uniform float exposure : hint_range(0.0, 5.0) = 1.2;
@@ -40,9 +41,18 @@ void fragment() {
     } else {
         vec4 tex = texture(video_texture, sprite_uv);
 
-        // 4. Monochromatic Aged Film Logic
-        // Convert to luma using standard rec.601 weights
-        float luma = dot(tex.rgb, vec3(0.299, 0.587, 0.114));
+        // 4. Extract luma from the specified channel
+        float luma = 0.0;
+        if (sheet_channel == 0) {  // R channel
+            luma = tex.r;
+        } else if (sheet_channel == 1) {  // G channel
+            luma = tex.g;
+        } else if (sheet_channel == 2) {  // B channel
+            luma = tex.b;
+        } else {
+            // Default to rec.601 if unknown channel
+            luma = dot(tex.rgb, vec3(0.299, 0.587, 0.114));
+        }
 
         // Apply High Contrast and Overexposure (Blowing out the whites)
         luma = pow(luma * exposure, contrast);

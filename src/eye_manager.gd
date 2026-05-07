@@ -47,7 +47,7 @@ func get_actor_names() -> PackedStringArray:
 	return PackedStringArray(names)
 
 ## Request a video texture and UV bounds for a given actor state
-## Returns a dictionary with "texture", "uv_offset", and "uv_scale" keys
+## Returns a dictionary with "texture", "uv_offset", "uv_scale", "aspect_ratio", "sheet_channel" (int enum), and "video_stream_player" keys
 ## Returns empty dict if the clip cannot be found
 func get_video_texture_and_uvs(actor_name: String, angle: int, aggravation: int) -> Dictionary:
 	if not manifest:
@@ -67,6 +67,7 @@ func get_video_texture_and_uvs(actor_name: String, angle: int, aggravation: int)
 
 	var sheet_path = sheet_info.get("path", "")
 	var sheet_slot = int(clip.get("sheet_slot", 0))
+	var sheet_channel = int(clip.get("sheet_channel", ChannelType.Type.R))
 
 	var vsp = request_video_texture(sheet_path)
 	if not vsp:
@@ -82,6 +83,7 @@ func get_video_texture_and_uvs(actor_name: String, angle: int, aggravation: int)
 		"uv_offset": uv_bounds.get("uv_offset", Vector2.ZERO),
 		"uv_scale": uv_bounds.get("uv_scale", Vector2.ONE),
 		"aspect_ratio": uv_bounds.get("aspect_ratio", 1.0),
+		"sheet_channel": sheet_channel,
 		"video_stream_player": vsp
 	}
 

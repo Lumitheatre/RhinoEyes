@@ -174,6 +174,7 @@ func _apply_texture_and_uvs(texture_data: Dictionary):
 	var uv_offset = texture_data.get("uv_offset", Vector2.ZERO)
 	var uv_scale = texture_data.get("uv_scale", Vector2.ONE)
 	var aspect_ratio = texture_data.get("aspect_ratio", 1.0)
+	var sheet_channel = int(texture_data.get("sheet_channel", ChannelType.R))
 
 	if texture:
 		material_override.set_shader_parameter("video_texture", texture)
@@ -182,6 +183,7 @@ func _apply_texture_and_uvs(texture_data: Dictionary):
 	material_override.set_shader_parameter("uv_offset", uv_offset)
 	material_override.set_shader_parameter("uv_scale", uv_scale)
 	material_override.set_shader_parameter("tile_aspect_ratio", aspect_ratio)
+	material_override.set_shader_parameter("sheet_channel", sheet_channel)
 
 ## Sync all proxy properties to the shader material
 func _sync_all_proxy_properties():
