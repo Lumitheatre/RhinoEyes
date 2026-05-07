@@ -38,12 +38,13 @@ class SheetBuilder:
     By default, rerunning the script will skip existing tiles. Use regenerate_tiles=True to recreate them.
     """
 
-    def __init__(self, config, regenerate_tiles=False):
+    def __init__(self, config, regenerate_tiles=False, sequential=False):
         """Initialize SheetBuilder with a parsed ConfigParser object.
 
         Args:
             config: A configparser.ConfigParser object containing the manifest configuration.
             regenerate_tiles: If True, recreate all tiles. If False (default), skip existing tiles.
+            sequential: If True, build sheets sequentially. If False (default), build in parallel.
         """
         if not isinstance(config, configparser.ConfigParser):
             raise TypeError("config must be a configparser.ConfigParser object")
@@ -52,6 +53,7 @@ class SheetBuilder:
         self.sheets = {}
         self.actors = []
         self.regenerate_tiles = regenerate_tiles
+        self.sequential = sequential
 
     def get_sheet_tiles_dir(self, sheet_path: str) -> Path:
         """Get the tiles directory for a sheet based on its output path.
@@ -404,7 +406,7 @@ class SheetBuilder:
         return sheet_tiles_dirs
 
     def build_all_sheets(self, sheet_tiles_dirs: Dict[str, Path], console: Console) -> None:
-        """Build all sprite sheets in parallel.
+        """Build all sprite sheets.
 
         Args:
             sheet_tiles_dirs: Dictionary mapping sheet IDs to their tiles directories.
@@ -414,6 +416,59 @@ class SheetBuilder:
             console.print("[yellow]No sheets to build[/yellow]")
             return
 
+        if self.sequential:
+            self._build_sheets_sequential(sheet_tiles_dirs, console)
+        else:
+            self._build_sheets_parallel(sheet_tiles_dirs, console)
+
+    def _build_sheets_sequential(self, sheet_tiles_dirs: Dict[str, Path], console: Console) -> None:
+        """Build all sprite sheets sequentially.
+
+        Args:
+            sheet_tiles_dirs: Dictionary mapping sheet IDs to their tiles directories.
+            console: Console instance for output.
+        """
+        display = SpriteSheetDisplay(len(self.sheets), console)
+        display.start_display()
+
+        try:
+            for sid, data in self.sheets.items():
+                tiles_dir = sheet_tiles_dirs[sid]
+                num_tiles = len(data["clips"])
+
+                # Get sheet parameters
+                tile_resolution, grid, duration, fps = self.get_sheet_parameters(sid)
+
+                # Calculate resulting sprite sheet resolution
+                sheet_w, sheet_h = data["resolution"]
+
+                future_id = id(sid)
+                display.start_job(future_id, sid, data["path"], num_tiles, tile_resolution, (sheet_w, sheet_h), fps)
+
+                try:
+                    self.build_sheet(
+                        sid,
+                        tiles_dir,
+                        tile_resolution,
+                        grid,
+                        duration,
+                        fps
+                    )
+                    display.complete_job(future_id)
+                except Exception as e:
+                    display.print_error(f"Sheet {sid}", e)
+        finally:
+            display.stop_display()
+
+        console.print()
+
+    def _build_sheets_parallel(self, sheet_tiles_dirs: Dict[str, Path], console: Console) -> None:
+        """Build all sprite sheets in parallel.
+
+        Args:
+            sheet_tiles_dirs: Dictionary mapping sheet IDs to their tiles directories.
+            console: Console instance for output.
+        """
         # Create display for sheet generation
         display = SpriteSheetDisplay(len(self.sheets), console)
 

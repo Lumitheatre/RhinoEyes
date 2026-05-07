@@ -122,6 +122,11 @@ Examples:
         action="store_true",
         help="Recreate all tiles even if they already exist. Without this flag, existing tiles are skipped.",
     )
+    build_sheets_parser.add_argument(
+        "--seq-sheet-build",
+        action="store_true",
+        help="Build sheets sequentially instead of in parallel. Use this if parallel building uses too many resources.",
+    )
 
     args = parser.parse_args()
 
@@ -248,7 +253,7 @@ def _handle_build_sheets(manager, manifest_path, args):
     print("Loaded manifest")
 
     # Build sheets from manifest
-    builder = SheetBuilder(manifest, regenerate_tiles=args.regenerate_tiles)
+    builder = SheetBuilder(manifest, regenerate_tiles=args.regenerate_tiles, sequential=args.seq_sheet_build)
     builder.run()
     print(f"Built sheets from manifest: {manifest_path}")
 
