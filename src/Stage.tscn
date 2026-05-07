@@ -12,10 +12,10 @@
 render_priority = 0
 shader = ExtResource("3_cel86")
 shader_parameter/video_texture = SubResource("Texture2DRD_nxjac")
-shader_parameter/uv_offset = Vector2(0.875, 0.625)
-shader_parameter/uv_scale = Vector2(0.125, 0.125)
+shader_parameter/uv_offset = Vector2(0.9375, 0.125)
+shader_parameter/uv_scale = Vector2(0.0625, 0.0625)
 shader_parameter/tile_aspect_ratio = 1.7777777777777777
-shader_parameter/exposure = 1.3599999999999999
+shader_parameter/exposure = 1.36
 shader_parameter/contrast = 1.6
 shader_parameter/emission_strength = 1.0
 shader_parameter/tint = Color(1, 1, 1, 1)
@@ -30,8 +30,72 @@ shader_parameter/flicker_seed = 43758.5453
 render_priority = 0
 shader = ExtResource("3_cel86")
 shader_parameter/video_texture = SubResource("Texture2DRD_nxjac")
-shader_parameter/uv_offset = Vector2(0.5, 0.25)
-shader_parameter/uv_scale = Vector2(0.125, 0.125)
+shader_parameter/uv_offset = Vector2(0.25, 0.0625)
+shader_parameter/uv_scale = Vector2(0.0625, 0.0625)
+shader_parameter/tile_aspect_ratio = 1.7777777777777777
+shader_parameter/exposure = 1.08
+shader_parameter/contrast = 1.6
+shader_parameter/emission_strength = 1.44
+shader_parameter/tint = Color(1, 1, 1, 1)
+shader_parameter/enable_flicker = true
+shader_parameter/flicker_frequency = 15.0
+shader_parameter/flicker_amplitude = 0.08
+shader_parameter/flicker_seed = 43758.5453
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_tsohr"]
+render_priority = 0
+shader = ExtResource("3_cel86")
+shader_parameter/video_texture = SubResource("Texture2DRD_nxjac")
+shader_parameter/uv_offset = Vector2(0.375, 0.4375)
+shader_parameter/uv_scale = Vector2(0.0625, 0.0625)
+shader_parameter/tile_aspect_ratio = 1.7777777777777777
+shader_parameter/exposure = 1.08
+shader_parameter/contrast = 1.6
+shader_parameter/emission_strength = 1.44
+shader_parameter/tint = Color(1, 1, 1, 1)
+shader_parameter/enable_flicker = true
+shader_parameter/flicker_frequency = 15.0
+shader_parameter/flicker_amplitude = 0.08
+shader_parameter/flicker_seed = 43758.5453
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_7gd3w"]
+render_priority = 0
+shader = ExtResource("3_cel86")
+shader_parameter/video_texture = SubResource("Texture2DRD_nxjac")
+shader_parameter/uv_offset = Vector2(0.3125, 0.5625)
+shader_parameter/uv_scale = Vector2(0.0625, 0.0625)
+shader_parameter/tile_aspect_ratio = 1.7777777777777777
+shader_parameter/exposure = 1.08
+shader_parameter/contrast = 1.6
+shader_parameter/emission_strength = 1.44
+shader_parameter/tint = Color(1, 1, 1, 1)
+shader_parameter/enable_flicker = true
+shader_parameter/flicker_frequency = 15.0
+shader_parameter/flicker_amplitude = 0.08
+shader_parameter/flicker_seed = 43758.5453
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_r28cg"]
+render_priority = 0
+shader = ExtResource("3_cel86")
+shader_parameter/video_texture = SubResource("Texture2DRD_nxjac")
+shader_parameter/uv_offset = Vector2(0.0625, 0.3125)
+shader_parameter/uv_scale = Vector2(0.0625, 0.0625)
+shader_parameter/tile_aspect_ratio = 1.7777777777777777
+shader_parameter/exposure = 1.08
+shader_parameter/contrast = 1.6
+shader_parameter/emission_strength = 1.44
+shader_parameter/tint = Color(1, 1, 1, 1)
+shader_parameter/enable_flicker = true
+shader_parameter/flicker_frequency = 15.0
+shader_parameter/flicker_amplitude = 0.08
+shader_parameter/flicker_seed = 43758.5453
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_6bbl5"]
+render_priority = 0
+shader = ExtResource("3_cel86")
+shader_parameter/video_texture = SubResource("Texture2DRD_nxjac")
+shader_parameter/uv_offset = Vector2(0.3125, 0.6875)
+shader_parameter/uv_scale = Vector2(0.0625, 0.0625)
 shader_parameter/tile_aspect_ratio = 1.7777777777777777
 shader_parameter/exposure = 1.08
 shader_parameter/contrast = 1.6
@@ -57,11 +121,11 @@ manifest = ExtResource("2_ub6vd")
 metadata/_custom_type_script = "uid://cteeeb0bmtmg5"
 
 [node name="EyeActor" type="MeshInstance3D" parent="EyeManager" unique_id=2021718081]
-transform = Transform3D(1, 0, 0, 0, -4.371139e-08, -1, 0, 1, -4.371139e-08, -1.1275127, 0.0029996634, 0)
+transform = Transform3D(0.47, 0, 0, 0, -2.0544352e-08, -0.47, 0, 0.47, -2.0544352e-08, -1.9680958, 0.93005514, 0)
 material_override = SubResource("ShaderMaterial_ub6vd")
 mesh = SubResource("PlaneMesh_hrmib")
 script = ExtResource("4_tsohr")
-exposure = 1.3599999999999999
+exposure = 1.36
 contrast = 1.6
 emission_strength = 1.0
 character_name = "Dasha"
@@ -70,7 +134,7 @@ aggravation = 1
 metadata/_custom_type_script = "uid://brvjdnnvv2hyx"
 
 [node name="EyeActor2" type="MeshInstance3D" parent="EyeManager" unique_id=64907441]
-transform = Transform3D(1, 0, 0, 0, -4.371139e-08, -1, 0, 1, -4.371139e-08, 1.116337, -0.017725348, 0)
+transform = Transform3D(0.455, 0, 0, 0, -1.9888683e-08, -0.455, 0, 0.455, -1.9888683e-08, 1.8776412, 0.970634, 0)
 material_override = SubResource("ShaderMaterial_cel86")
 mesh = SubResource("PlaneMesh_hrmib")
 script = ExtResource("4_tsohr")
@@ -78,6 +142,58 @@ exposure = 1.08
 contrast = 1.6
 emission_strength = 1.44
 character_name = "Alisa"
+view_angle = 5
+aggravation = 3
+metadata/_custom_type_script = "uid://brvjdnnvv2hyx"
+
+[node name="EyeActor3" type="MeshInstance3D" parent="EyeManager" unique_id=921557969]
+transform = Transform3D(0.455, 0, 0, 0, -1.9888683e-08, -0.455, 0, 0.455, -1.9888683e-08, -1.9555902, -0.057793945, 0)
+material_override = SubResource("ShaderMaterial_tsohr")
+mesh = SubResource("PlaneMesh_hrmib")
+script = ExtResource("4_tsohr")
+exposure = 1.08
+contrast = 1.6
+emission_strength = 1.44
+character_name = "Dina"
+view_angle = 5
+aggravation = 3
+metadata/_custom_type_script = "uid://brvjdnnvv2hyx"
+
+[node name="EyeActor4" type="MeshInstance3D" parent="EyeManager" unique_id=1194612402]
+transform = Transform3D(0.455, 0, 0, 0, -1.9888683e-08, -0.455, 0, 0.455, -1.9888683e-08, 1.6238732, -0.057793945, 0)
+material_override = SubResource("ShaderMaterial_7gd3w")
+mesh = SubResource("PlaneMesh_hrmib")
+script = ExtResource("4_tsohr")
+exposure = 1.08
+contrast = 1.6
+emission_strength = 1.44
+character_name = "Dyadya Vova"
+view_angle = 5
+aggravation = 3
+metadata/_custom_type_script = "uid://brvjdnnvv2hyx"
+
+[node name="EyeActor5" type="MeshInstance3D" parent="EyeManager" unique_id=1356393547]
+transform = Transform3D(0.455, 0, 0, 0, -1.9888683e-08, -0.455, 0, 0.455, -1.9888683e-08, 1.6238732, -0.8992349, 0)
+material_override = SubResource("ShaderMaterial_r28cg")
+mesh = SubResource("PlaneMesh_hrmib")
+script = ExtResource("4_tsohr")
+exposure = 1.08
+contrast = 1.6
+emission_strength = 1.44
+character_name = "Sergey"
+view_angle = 5
+aggravation = 3
+metadata/_custom_type_script = "uid://brvjdnnvv2hyx"
+
+[node name="EyeActor6" type="MeshInstance3D" parent="EyeManager" unique_id=924590995]
+transform = Transform3D(0.455, 0, 0, 0, -1.9888683e-08, -0.455, 0, 0.455, -1.9888683e-08, -1.4881229, -0.8992349, 0)
+material_override = SubResource("ShaderMaterial_6bbl5")
+mesh = SubResource("PlaneMesh_hrmib")
+script = ExtResource("4_tsohr")
+exposure = 1.08
+contrast = 1.6
+emission_strength = 1.44
+character_name = "Vitaliy"
 view_angle = 5
 aggravation = 3
 metadata/_custom_type_script = "uid://brvjdnnvv2hyx"

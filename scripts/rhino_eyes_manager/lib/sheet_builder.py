@@ -287,14 +287,17 @@ class SheetBuilder:
         # Sheet capacity is determined by grid product (e.g., 8x8 = 64 tiles)
         for i in range(num_tiles):
             file_path = tiles_by_slot.get(i, black_tile)
-            inputs.extend(["-hwaccel", "d3d11va", "-i", str(file_path)])
+            inputs.extend(["-i", str(file_path)])
             all_tiles.append(f"[{current_input_idx}:v]")
             current_input_idx += 1
 
         # Stack tiles into the grid
         filter_parts.append(f"{''.join(all_tiles)}xstack=inputs={num_tiles}:layout={layout}[outv]")
 
-        # 4. Execute FFmpeg
+        # 4. Execute FFmpeg with H.264 encoding optimized for ROG Ally hardware decoding in Godot
+        # Godot (via plugins) generally handles H.264 better than H.265 due to missing OS HEVC extensions
+        # Profile High, Level 4.2 provides excellent hardware acceleration on RDNA 2 GPU
+        # -tune fastdecode simplifies the stream to ensure smooth playback
         print(f"--- Encoding Grid Sheet: {output_path.name} ---")
 
         cmd = [
@@ -304,7 +307,11 @@ class SheetBuilder:
             "-map", "[outv]",
             "-c:v", "libx264",
             "-pix_fmt", "yuv420p",
-            "-crf", "18",
+            "-profile:v", "high",
+            "-level", "4.2",
+            "-preset", "fast",
+            "-crf", "20",
+            "-tune", "fastdecode",
             str(output_path)
         ]
 
