@@ -229,7 +229,7 @@ class SheetBuilder:
 
         return output_path, clip['uid']
 
-    def build_sheet(self, sheet_id, tiles_dir: Path, tile_resolution=(420,270), grid=(8,8), duration=30):
+    def build_sheet(self, sheet_id, tiles_dir: Path, tile_resolution=(420,270), grid=(8,8), duration=30, fps=30):
         """Step 2: Pack tiles into a grid sprite sheet.
 
         Args:
@@ -238,6 +238,7 @@ class SheetBuilder:
             tile_resolution: Tuple of (width, height) for individual tiles (strings or integers).
             grid: Tuple of (grid_width, grid_height) for the sheet layout.
             duration: Duration of the sheet in seconds.
+            fps: Frames per second for the sheet.
         """
         sheet_data = self.sheets[sheet_id]
         clips = sheet_data["clips"]
@@ -262,7 +263,7 @@ class SheetBuilder:
         # Create "Black" tile for missing slots
         black_tile = tiles_dir / "black.mov"
         cmd = [
-            "ffmpeg", "-y", "-f", "lavfi", "-i", f"color=c=black:s={'x'.join(tile_res_str)}:d={duration}",
+            "ffmpeg", "-y", "-f", "lavfi", "-i", f"color=c=black:s={'x'.join(tile_res_str)}:d={duration}:r={fps}",
             "-c:v", "prores_ks", str(black_tile)
         ]
         result = subprocess.run(cmd, capture_output=True, text=True)
@@ -305,6 +306,7 @@ class SheetBuilder:
             *inputs,
             "-filter_complex", ";".join(filter_parts),
             "-map", "[outv]",
+            "-r", str(fps),
             "-c:v", "libx264",
             "-pix_fmt", "yuv420p",
             "-profile:v", "high",
@@ -436,7 +438,8 @@ class SheetBuilder:
                 tiles_dir,
                 tile_resolution,
                 grid,
-                duration
+                duration,
+                fps
             )
 
             future_id = id(future)

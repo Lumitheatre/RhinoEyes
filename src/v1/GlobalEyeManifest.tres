@@ -1,8 +1,0 @@
-[gd_resource type="Resource" script_class="EyeManifestV1" format=3 uid="uid://degya7o4jux8j"]
-
-[ext_resource type="Script" uid="uid://cw4cwdl5blm32" path="res://src/v1/EyeManifest.gd" id="1_8hpaw"]
-
-[resource]
-script = ExtResource("1_8hpaw")
-config_path = "res://assets/eyes/eye_manifest.cfg"
-metadata/_custom_type_script = "uid://cw4cwdl5blm32"
