@@ -198,9 +198,11 @@ class SheetBuilder:
         # If we want to fit 10s into 5s, factor is 0.5 (Speed Up)
         speed_factor = new_seg_dur / orig_dur
 
-        # 3. Random Phase Shift (frames)
+        # 3. Phase Shift (frames)
         # We shift by frames rather than seconds for pixel-perfect alignment
-        rand_offset_frames = 0 # random.randint(0, frames_per_segment - 1)
+        # loop_offset is a value between 0 and 1 that represents how far through the loop to start
+        loop_offset = clip.get("loop_offset", 0.0)
+        rand_offset_frames = int(loop_offset * frames_per_segment)
         rand_offset_secs = rand_offset_frames / fps
 
         # 4. The "Seam-Free" Filter Chain

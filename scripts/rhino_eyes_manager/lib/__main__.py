@@ -70,6 +70,11 @@ Examples:
         action="store_true",
         help="Destructively clear all clip-to-sheet assignments and reallocate from scratch.",
     )
+    manage_parser.add_argument(
+        "--regenerate-clip-loop-offsets",
+        action="store_true",
+        help="Regenerate loop_offset values for all clips to randomize their loop phase.",
+    )
 
     # === INIT command ===
     init_parser = subparsers.add_parser(
@@ -226,7 +231,7 @@ def _handle_manage(manager, manifest_path, args):
     print(f"{operation} clips to sheets")
 
     # Update and save manifest
-    result_path = manager.update_manifest(manifest_path, manifest=manifest)
+    result_path = manager.update_manifest(manifest_path, manifest=manifest, regenerate_loop_offsets=args.regenerate_clip_loop_offsets)
     print(f"Updated manifest: {result_path}")
 
 

@@ -2,6 +2,7 @@
 
 import configparser
 import json
+import random
 from pathlib import Path
 from typing import List, Optional
 
@@ -315,12 +316,16 @@ class ManifestManager:
                     except json.JSONDecodeError:
                         pass
 
-    def initialize_entry_fields(self, manifest: configparser.ConfigParser) -> None:
+    def initialize_entry_fields(self, manifest: configparser.ConfigParser, regenerate_loop_offsets: bool = False) -> None:
         """
         Initialize missing fields in entries with default values.
         Ensures all entries have a consistent structure.
 
         Modifies manifest in place.
+
+        Args:
+            manifest: The manifest to update
+            regenerate_loop_offsets: If True, regenerate loop_offset for all entries. If False, only initialize missing values.
         """
         for section in manifest.sections():
             if section.startswith(f"{ACTOR_NS}:"):
@@ -332,6 +337,11 @@ class ManifestManager:
                             entry.setdefault("enabled", "true")
                             entry.setdefault("angle", 0)
                             entry.setdefault("aggravation", 0)
+                            
+                            # Handle loop_offset: generate if missing or regenerate_loop_offsets is True
+                            if regenerate_loop_offsets or "loop_offset" not in entry:
+                                entry["loop_offset"] = round(random.random(), 4)
+                        
                         manifest.set(section, "clips", json.dumps(clips, indent=2, separators=(", ", ": ")))
                     except json.JSONDecodeError:
                         pass
@@ -464,7 +474,7 @@ class ManifestManager:
         # Sync with clips directory
         self.sync_manifest_from_clips(clip_dir, manifest, delete_absent)
 
-    def update_manifest(self, manifest_path: Path, manifest: Optional[configparser.ConfigParser] = None) -> str:
+    def update_manifest(self, manifest_path: Path, manifest: Optional[configparser.ConfigParser] = None, regenerate_loop_offsets: bool = False) -> str:
         """
         Update manifest to ensure it's cohesive with latest code changes.
 
@@ -476,6 +486,7 @@ class ManifestManager:
         Args:
             manifest_path: Manifest file to load and update
             manifest: Optional ConfigParser manifest object. If not provided, loads from manifest_path
+            regenerate_loop_offsets: If True, regenerate loop_offset values for all entries
 
         Returns:
             Path to the updated manifest
@@ -491,7 +502,7 @@ class ManifestManager:
 
         # Apply management operations
         self.assign_uids(manifest)
-        self.initialize_entry_fields(manifest)
+        self.initialize_entry_fields(manifest, regenerate_loop_offsets=regenerate_loop_offsets)
         self.sort_entries(manifest)
 
         # Save the updated manifest

@@ -49,9 +49,12 @@ class_name EyeActor
 
 @export_group("Eye Character")
 
+var _character_picker: String = ""
+
 @export var character_name: String = "":
 	set(val):
 		character_name = val
+		_character_picker = val
 		_update_display()
 
 @export_range(0.0, 360.0, 0.1) var view_angle: float = 0.0:
@@ -79,6 +82,35 @@ func _ready():
 	await _wait_for_eye_manager_ready()
 	print("Current character %s, angle %f, aggravation %d" % [character_name, view_angle, aggravation])
 	_update_display()
+
+func _get_property_list():
+	var properties = []
+
+	var eye_manager = _get_eye_manager()
+	if eye_manager:
+		var names = eye_manager.get_actor_names()
+		if names and names.size() > 0:
+			properties.append({
+				"name": "_character_picker",
+				"type": TYPE_STRING,
+				"hint": PROPERTY_HINT_ENUM,
+				"hint_string": ",".join(names),
+				"usage": PROPERTY_USAGE_EDITOR
+			})
+
+	return properties
+
+func _set(property, value):
+	if property == "_character_picker":
+		_character_picker = value
+		character_name = value
+		return true
+	return false
+
+func _get(property):
+	if property == "_character_picker":
+		return _character_picker
+	return null
 
 func _setup_material():
 	if not eye_shader:
