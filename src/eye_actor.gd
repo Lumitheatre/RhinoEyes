@@ -10,17 +10,17 @@ class_name EyeActor
 # --- Proxy Properties for Shader Uniforms ---
 @export_group("Film Aesthetics")
 
-@export_range(0.0, 5.0, 0.01) var exposure: float = 1.2:
+@export_range(0.0, 5.0, 0.01) var exposure: float = 1.0:
 	set(val):
 		exposure = val
 		_set_material_uniform("exposure", exposure)
 
-@export_range(0.0, 5.0, 0.01) var contrast: float = 3.0:
+@export_range(0.0, 5.0, 0.01) var contrast: float = 1.0:
 	set(val):
 		contrast = val
 		_set_material_uniform("contrast", contrast)
 
-@export_range(0.0, 10.0, 0.01) var emission_strength: float = 1.2:
+@export_range(0.0, 10.0, 0.01) var emission_strength: float = 1.0:
 	set(val):
 		emission_strength = val
 		_set_material_uniform("emission_strength", emission_strength)
@@ -68,6 +68,10 @@ func _ready():
 	_sync_all_proxy_properties()
 	await _wait_for_eye_manager_ready()
 	_update_display()
+
+func _notification(what):
+	if what == Node.NOTIFICATION_EDITOR_PRE_SAVE:
+		material_override.set_shader_parameter("video_texture", null)
 
 func _get_property_list():
 	var properties = []
@@ -174,10 +178,10 @@ func _apply_texture_and_uvs(texture_data: Dictionary):
 	var uv_offset = texture_data.get("uv_offset", Vector2.ZERO)
 	var uv_scale = texture_data.get("uv_scale", Vector2.ONE)
 	var aspect_ratio = texture_data.get("aspect_ratio", 1.0)
-	var sheet_channel = int(texture_data.get("sheet_channel", ChannelType.R))
+	var sheet_channel = int(texture_data.get("sheet_channel", ChannelType.Type.R))
 
-	if texture:
-		material_override.set_shader_parameter("video_texture", texture)
+	# Note: video_texture is intentionally NOT set here to prevent serialization.
+	# It's a transient texture that updates every frame in _process().
 
 	# Pass UV bounds and aspect ratio to the shader
 	material_override.set_shader_parameter("uv_offset", uv_offset)

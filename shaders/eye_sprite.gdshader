@@ -8,9 +8,9 @@ uniform float tile_aspect_ratio = 1.0;
 uniform int sheet_channel = 0;  // Channel enum: 0=R, 1=G, 2=B
 
 // Film Aesthetic Controls
-uniform float exposure : hint_range(0.0, 5.0) = 1.2;
-uniform float contrast : hint_range(0.0, 5.0) = 3;
-uniform float emission_strength : hint_range(0.0, 10.0) = 1.2;  // Applied after contrast
+uniform float exposure : hint_range(0.0, 5.0) = 1.0;
+uniform float contrast : hint_range(0.0, 5.0) = 1.0;
+uniform float emission_strength : hint_range(0.0, 10.0) = 1.0;  // Applied after contrast
 uniform vec3 tint : source_color = vec3(1.0);
 
 // Gate Flicker Controls
