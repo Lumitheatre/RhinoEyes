@@ -49,10 +49,20 @@ class_name EyeActor
 
 @export_group("Eye Character")
 
-# State - the only things the actor tracks
-var _character_name: String = ""
-var _view_angle: int = 0
-var _aggravation: int = 1
+@export var character_name: String = "":
+	set(val):
+		character_name = val
+		_update_display()
+
+@export_range(0.0, 360.0, 0.1) var view_angle: float = 0.0:
+	set(val):
+		view_angle = val
+		_update_display()
+
+@export_range(1, 3) var aggravation: int = 1:
+	set(val):
+		aggravation = val
+		_update_display()
 
 # References
 var current_video_stream_player: VideoStreamPlayer
@@ -67,63 +77,8 @@ func _ready():
 	_setup_material()
 	_sync_all_proxy_properties()
 	await _wait_for_eye_manager_ready()
+	print("Current character %s, angle %f, aggravation %d" % [character_name, view_angle, aggravation])
 	_update_display()
-
-func _get_property_list():
-	var properties = []
-
-	# Get character list from EyeManager
-	var eye_manager = _get_eye_manager()
-	if eye_manager:
-		var names = eye_manager.get_actor_names()
-		if names and names.size() > 0:
-			properties.append({
-				"name": "character_name",
-				"type": TYPE_STRING,
-				"hint": PROPERTY_HINT_ENUM,
-				"hint_string": ",".join(names)
-			})
-
-	if _character_name != "":
-		properties.append({
-			"name": "view_angle",
-			"type": TYPE_FLOAT,
-			"hint": PROPERTY_HINT_RANGE,
-			"hint_string": "0,360,0.1", # Min, Max, Step
-			"usage": PROPERTY_USAGE_DEFAULT # Makes it appear in Inspector and save
-		})
-		properties.append({
-			"name": "aggravation",
-			"type": TYPE_INT,
-			"hint": PROPERTY_HINT_RANGE,
-			"hint_string": "1,3"
-		})
-
-	return properties
-
-func _get(property):
-	if property == "character_name":
-		return _character_name
-	if property == "view_angle":
-		return _view_angle
-	if property == "aggravation":
-		return _aggravation
-	return null
-
-func _set(property, value):
-	if property == "character_name":
-		_character_name = value
-		_update_display()
-		return true
-	if property == "view_angle":
-		_view_angle = value
-		_update_display()
-		return true
-	if property == "aggravation":
-		_aggravation = value
-		_update_display()
-		return true
-	return false
 
 func _setup_material():
 	if not eye_shader:
@@ -135,12 +90,14 @@ func _setup_material():
 	material_override = mat
 
 func _update_display():
+	print("Updating display for character '%s', angle %f, aggravation %d" % [character_name, view_angle, aggravation])
+
 	if not is_inside_tree(): return
 	_request_video_and_update()
 
 ## Request updated video texture and UV bounds from the EyeManager
 func _request_video_and_update():
-	if _character_name == "":
+	if character_name == "":
 		return
 
 	var eye_manager = _get_eye_manager()
@@ -148,12 +105,12 @@ func _request_video_and_update():
 		push_error("EyeActor: Could not find EyeManager node. Make sure it's in the scene with unique name '%EyeManager'")
 		return
 
-	var result = eye_manager.get_video_texture_and_uvs(_character_name, _view_angle, _aggravation)
+	var result = eye_manager.get_video_texture_and_uvs(character_name, view_angle, aggravation)
 
-	# print("Received video data for character '%s': %s" % [_character_name, result])
+	print("Received video data for character '%s': %s" % [character_name, result])
 
 	if result.is_empty():
-		push_error("EyeActor: Failed to get video texture and UVs for character '%s'" % _character_name)
+		push_error("EyeActor: Failed to get video texture and UVs for character '%s'" % character_name)
 		return
 
 	# Release old video reference if we're switching
@@ -177,6 +134,7 @@ func _apply_texture_and_uvs(texture_data: Dictionary):
 
 	if texture:
 		material_override.set_shader_parameter("video_texture", texture)
+		print("Texture size: ", texture.get_width(), "x", texture.get_height())
 
 	# Pass UV bounds and aspect ratio to the shader
 	material_override.set_shader_parameter("uv_offset", uv_offset)
@@ -227,18 +185,18 @@ func _wait_for_eye_manager_ready():
 		await eye_manager.ready
 
 ## Public API for setting character state (useful for runtime)
-func set_character_state(name: String, angle: int, aggrav: int):
-	_character_name = name
-	_view_angle = angle
-	_aggravation = aggrav
+func set_character_state(name: String, angle: float, aggrav: int):
+	character_name = name
+	view_angle = angle
+	aggravation = aggrav
 	_update_display()
 
 ## Public API for updating just angle (common operation)
-func set_view_angle(angle: int):
-	_view_angle = angle
+func set_view_angle(angle: float):
+	view_angle = angle
 	_update_display()
 
 ## Public API for updating just aggravation
 func set_aggravation(aggrav: int):
-	_aggravation = aggrav
+	aggravation = aggrav
 	_update_display()
