@@ -50,7 +50,7 @@ shader_parameter/flicker_seed = 43758.5453
 render_priority = 0
 shader = ExtResource("3_cel86")
 shader_parameter/video_texture = SubResource("Texture2DRD_tsohr")
-shader_parameter/uv_offset = Vector2(0.6875, 0.75)
+shader_parameter/uv_offset = Vector2(0.5625, 0.75)
 shader_parameter/uv_scale = Vector2(0.0625, 0.0625)
 shader_parameter/tile_aspect_ratio = 1.7777777777777777
 shader_parameter/exposure = 1.17
@@ -69,7 +69,7 @@ shader_parameter/flicker_seed = 43758.5453
 render_priority = 0
 shader = ExtResource("3_cel86")
 shader_parameter/video_texture = SubResource("Texture2DRD_opo57")
-shader_parameter/uv_offset = Vector2(0.8125, 0)
+shader_parameter/uv_offset = Vector2(0.75, 0)
 shader_parameter/uv_scale = Vector2(0.0625, 0.0625)
 shader_parameter/tile_aspect_ratio = 1.7777777777777777
 shader_parameter/exposure = 1.17
@@ -103,7 +103,7 @@ shader_parameter/flicker_seed = 43758.5453
 render_priority = 0
 shader = ExtResource("3_cel86")
 shader_parameter/video_texture = SubResource("Texture2DRD_tsohr")
-shader_parameter/uv_offset = Vector2(0.0625, 0.0625)
+shader_parameter/uv_offset = Vector2(0, 0.0625)
 shader_parameter/uv_scale = Vector2(0.0625, 0.0625)
 shader_parameter/tile_aspect_ratio = 1.7777777777777777
 shader_parameter/exposure = 1.17
@@ -190,7 +190,6 @@ script = ExtResource("1_nxjac")
 manifest = ExtResource("2_ub6vd")
 target_node = NodePath("Target")
 target_lerp_speed = 0.5
-target_tween_transition_type = 1
 metadata/_custom_type_script = "uid://cteeeb0bmtmg5"
 
 [node name="EyeActor" type="MeshInstance3D" parent="EyeManager" unique_id=2021718081]
@@ -202,7 +201,7 @@ exposure = 1.17
 contrast = 1.78
 emission_strength = 1.15
 character_name = "Dasha"
-view_angle = 317.0
+view_angle = 306.0
 metadata/_custom_type_script = "uid://brvjdnnvv2hyx"
 
 [node name="EyeActor7" type="MeshInstance3D" parent="EyeManager" unique_id=824714467]
@@ -214,7 +213,7 @@ exposure = 1.17
 contrast = 1.78
 emission_strength = 1.15
 character_name = "Katya"
-view_angle = 265.0
+view_angle = 256.0
 metadata/_custom_type_script = "uid://brvjdnnvv2hyx"
 
 [node name="EyeActor9" type="MeshInstance3D" parent="EyeManager" unique_id=800783043]
@@ -226,7 +225,7 @@ exposure = 1.17
 contrast = 1.78
 emission_strength = 1.15
 character_name = "Artyom"
-view_angle = 257.0
+view_angle = 246.0
 metadata/_custom_type_script = "uid://brvjdnnvv2hyx"
 
 [node name="EyeActor8" type="MeshInstance3D" parent="EyeManager" unique_id=1677630707]
@@ -238,7 +237,7 @@ exposure = 1.17
 contrast = 1.78
 emission_strength = 1.15
 character_name = "Kostya"
-view_angle = 264.0
+view_angle = 246.0
 metadata/_custom_type_script = "uid://brvjdnnvv2hyx"
 
 [node name="EyeActor2" type="MeshInstance3D" parent="EyeManager" unique_id=64907441]
@@ -250,7 +249,7 @@ exposure = 1.02
 contrast = 1.78
 emission_strength = 1.0
 character_name = "Dina"
-view_angle = 222.0
+view_angle = 220.0
 metadata/_custom_type_script = "uid://brvjdnnvv2hyx"
 
 [node name="EyeActor3" type="MeshInstance3D" parent="EyeManager" unique_id=921557969]
@@ -262,7 +261,7 @@ exposure = 1.17
 contrast = 1.78
 emission_strength = 1.15
 character_name = "Alisa"
-view_angle = 331.0
+view_angle = 318.0
 metadata/_custom_type_script = "uid://brvjdnnvv2hyx"
 
 [node name="EyeActor4" type="MeshInstance3D" parent="EyeManager" unique_id=1194612402]
@@ -274,7 +273,7 @@ exposure = 1.17
 contrast = 1.78
 emission_strength = 1.15
 character_name = "Sergey"
-view_angle = 208.0
+view_angle = 209.0
 aggravation = 3
 metadata/_custom_type_script = "uid://brvjdnnvv2hyx"
 
@@ -287,7 +286,7 @@ exposure = 1.02
 contrast = 1.78
 emission_strength = 1.0
 character_name = "Dyadya Vova"
-view_angle = 194.0
+view_angle = 197.0
 metadata/_custom_type_script = "uid://brvjdnnvv2hyx"
 
 [node name="EyeActor6" type="MeshInstance3D" parent="EyeManager" unique_id=924590995]
@@ -299,11 +298,11 @@ exposure = 1.17
 contrast = 1.78
 emission_strength = 1.15
 character_name = "Vitaliy"
-view_angle = 350.0
+view_angle = 338.0
 metadata/_custom_type_script = "uid://brvjdnnvv2hyx"
 
 [node name="Target" type="Node3D" parent="EyeManager" unique_id=507729988]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.15601563, -0.7488774, 0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.5616579, -0.99850315, 0)
 
 [node name="Misha" type="MeshInstance3D" parent="EyeManager/Target" unique_id=82147127]
 transform = Transform3D(0.5, 0, 0, 0, 0.5, 0, 0, 0, 0.5, 0.08230114, -0.095677495, 0)

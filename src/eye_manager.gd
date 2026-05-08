@@ -26,8 +26,6 @@ func _exit_tree():
 var destination_pos: Vector3
 
 @export var target_lerp_speed: float = 5.0
-@export var target_tween_ease_type: Tween.EaseType = Tween.EASE_IN_OUT
-@export var target_tween_transition_type: Tween.TransitionType = Tween.TRANS_LINEAR
 @export var target_plane_offset: float = 0.0 # The height of the "stage" floor
 
 var _target_tween: Tween
@@ -52,20 +50,6 @@ func _ready():
     add_child(_video_container)
     _video_container.hide()
 
-func _tween_to_destination() -> void:
-    """Create a tween to smoothly move the target node to the destination position."""
-    if not target_node:
-        return
-
-    # Kill any existing tween to prevent overlapping animations
-    if _target_tween:
-        _target_tween.kill()
-
-    _target_tween = create_tween()
-    _target_tween.set_ease(target_tween_ease_type)
-    _target_tween.set_trans(target_tween_transition_type)
-    _target_tween.tween_property(target_node, "global_position", destination_pos, 1.0 / target_lerp_speed)
-
 func get_target_position() -> Vector3:
     if target_node:
         return target_node.global_transform.origin
@@ -77,6 +61,12 @@ func _input(event):
         if event.pressed:
             update_destination(event.position)
 
+func _process(delta):
+    # Continuously tween towards the destination position for smooth movement
+    if target_node and destination_pos:
+        var current_pos = target_node.global_transform.origin
+        target_node.global_transform.origin = current_pos.lerp(destination_pos, target_lerp_speed * delta)
+
 func update_destination(screen_pos: Vector2):
     var cam = get_viewport().get_camera_3d()
     var ray_origin = cam.project_ray_origin(screen_pos)
@@ -87,7 +77,6 @@ func update_destination(screen_pos: Vector2):
     if ray_dir.z != 0:
         var t = (target_plane_offset - ray_origin.z) / ray_dir.z
         destination_pos = ray_origin + ray_dir * t
-        _tween_to_destination()
 
 ## Get list of available actor names from the manifest
 func get_actor_names() -> PackedStringArray:
