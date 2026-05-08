@@ -25,6 +25,11 @@ class_name EyeActor
         emission_strength = val
         _set_material_uniform("emission_strength", emission_strength)
 
+@export_range(0.0, 1.0, 0.01) var opacity_multiplier: float = 1.0:
+    set(val):
+        opacity_multiplier = val
+        _set_material_uniform("opacity_multiplier", opacity_multiplier)
+
 @export_group("Film Flicker")
 
 @export var enable_flicker: bool = true:
@@ -178,6 +183,7 @@ func _sync_all_proxy_properties():
     _set_material_uniform("exposure", exposure)
     _set_material_uniform("contrast", contrast)
     _set_material_uniform("emission_strength", emission_strength)
+    _set_material_uniform("opacity_multiplier", opacity_multiplier)
     _set_material_uniform("enable_flicker", enable_flicker)
     _set_material_uniform("flicker_frequency", flicker_frequency)
     _set_material_uniform("flicker_amplitude", flicker_amplitude)

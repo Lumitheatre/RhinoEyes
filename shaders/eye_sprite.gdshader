@@ -11,6 +11,7 @@ uniform float exposure : hint_range(0.0, 5.0) = 1.2;
 uniform float contrast : hint_range(0.0, 5.0) = 3;
 uniform float emission_strength : hint_range(0.0, 10.0) = 1.2;  // Applied after contrast
 uniform vec3 tint : source_color = vec3(1.0);
+uniform float opacity_multiplier : hint_range(0.0, 1.0) = 1.0;  // For smooth fade in/out
 
 // Gate Flicker Controls
 uniform bool enable_flicker = true;
@@ -63,6 +64,6 @@ void fragment() {
         // 5. Final Output
         // Using EMISSION > 1.0 triggers the WorldEnvironment Glow
         EMISSION = vec3(luma * flicker) * tint;
-        ALPHA = luma;
+        ALPHA = luma * opacity_multiplier;
     }
 }
