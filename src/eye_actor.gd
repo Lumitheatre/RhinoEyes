@@ -82,7 +82,7 @@ func _ready():
     _setup_material()
     _sync_all_proxy_properties()
     await _wait_for_eye_manager_ready()
-    print("Current character %s, angle %f, aggravation %d" % [character_name, view_angle, aggravation])
+    # print("Current character %s, angle %f, aggravation %d" % [character_name, view_angle, aggravation])
     _update_display()
 
 func _get_property_list():
@@ -125,7 +125,7 @@ func _setup_material():
     material_override = mat
 
 func _update_display():
-    print("Updating display for character '%s', angle %f, aggravation %d" % [character_name, view_angle, aggravation])
+    # print("Updating display for character '%s', angle %f, aggravation %d" % [character_name, view_angle, aggravation])
 
     if not is_inside_tree(): return
     _request_video_and_update()
@@ -142,7 +142,7 @@ func _request_video_and_update():
 
     var result = eye_manager.get_video_texture_and_uvs(character_name, view_angle, aggravation)
 
-    print("Received video data for character '%s': %s" % [character_name, result])
+    # print("Received video data for character '%s': %s" % [character_name, result])
 
     if result.is_empty():
         push_error("EyeActor: Failed to get video texture and UVs for character '%s'" % character_name)
@@ -169,7 +169,7 @@ func _apply_texture_and_uvs(texture_data: Dictionary):
 
     if texture:
         material_override.set_shader_parameter("video_texture", texture)
-        print("Texture size: ", texture.get_width(), "x", texture.get_height())
+        # print("Texture size: ", texture.get_width(), "x", texture.get_height())
 
     # Pass UV bounds and aspect ratio to the shader
     material_override.set_shader_parameter("uv_offset", uv_offset)
@@ -201,6 +201,39 @@ func _process(_delta):
         var tex = current_video_stream_player.get_video_texture()
         if tex:
             material_override.set_shader_parameter("video_texture", tex)
+
+    # Update view angle to track the target
+    _update_view_angle_to_target()
+
+func _update_view_angle_to_target() -> void:
+    """Poll the EyeManager for target position and update view_angle accordingly.
+    Cardinal right (East) on the XY plane is 0 degrees.
+    """
+    var eye_manager = _get_eye_manager()
+    if not eye_manager:
+        return
+
+    var target_pos = eye_manager.get_target_position()
+    var self_pos = global_position
+
+    # Project both positions onto the XY plane (ignore Z)
+    var self_xy = Vector2(self_pos.x, self_pos.y)
+    var target_xy = Vector2(target_pos.x, target_pos.y)
+
+    # Calculate direction vector from self to target
+    var direction = (target_xy - self_xy).normalized()
+
+    # Calculate angle: atan2 gives angle from positive X-axis (East = 0 degrees)
+    # atan2(y, x) where y is up and x is right in 2D
+    var angle_rad = atan2(direction.y, direction.x)
+    var angle_deg = rad_to_deg(angle_rad)
+
+    # Normalize to 0-360 range
+    if angle_deg < 0:
+        angle_deg += 360.0
+
+    # Round to nearest integer for view_angle (assuming it expects discrete angles)
+    view_angle = round(angle_deg)
 
 func _exit_tree():
     if current_video_stream_player:

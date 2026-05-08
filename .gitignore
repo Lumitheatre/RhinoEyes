@@ -27,3 +27,4 @@ addons/*
 
 *.egg-info
 *__pycache__/
+*.af~lock~
