@@ -17,6 +17,21 @@ func _exit_tree():
     set(val):
         manifest = val
 
+@export_group("Target Tracking")
+
+## This is the target the transform of which the eyes follow
+@export var target_node: Node3D
+
+# This is the position in world space the target_node is seeking to reach
+var destination_pos: Vector3
+
+@export var target_lerp_speed: float = 5.0
+@export var target_tween_ease_type: Tween.EaseType = Tween.EASE_IN_OUT
+@export var target_tween_transition_type: Tween.TransitionType = Tween.TRANS_LINEAR
+@export var target_plane_offset: float = 0.0 # The height of the "stage" floor
+
+var _target_tween: Tween
+
 func _get_configuration_warnings() -> PackedStringArray:
     var warnings = PackedStringArray()
     if not manifest:
@@ -36,6 +51,43 @@ func _ready():
     _video_container.name = "_VideoPool_Hidden"
     add_child(_video_container)
     _video_container.hide()
+
+func _tween_to_destination() -> void:
+    """Create a tween to smoothly move the target node to the destination position."""
+    if not target_node:
+        return
+
+    # Kill any existing tween to prevent overlapping animations
+    if _target_tween:
+        _target_tween.kill()
+
+    _target_tween = create_tween()
+    _target_tween.set_ease(target_tween_ease_type)
+    _target_tween.set_trans(target_tween_transition_type)
+    _target_tween.tween_property(target_node, "global_position", destination_pos, 1.0 / target_lerp_speed)
+
+func get_target_position() -> Vector3:
+    if target_node:
+        return target_node.global_transform.origin
+    return destination_pos
+
+func _input(event):
+    # Handle Mouse Click or Touchscreen Tap
+    if event is InputEventMouseButton or event is InputEventScreenTouch:
+        if event.pressed:
+            update_destination(event.position)
+
+func update_destination(screen_pos: Vector2):
+    var cam = get_viewport().get_camera_3d()
+    var ray_origin = cam.project_ray_origin(screen_pos)
+    var ray_dir = cam.project_ray_normal(screen_pos)
+
+    # Project the click onto the XY plane (Z = 0)
+    # Intersection of ray and plane: t = -origin.z / dir.z
+    if ray_dir.z != 0:
+        var t = (target_plane_offset - ray_origin.z) / ray_dir.z
+        destination_pos = ray_origin + ray_dir * t
+        _tween_to_destination()
 
 ## Get list of available actor names from the manifest
 func get_actor_names() -> PackedStringArray:

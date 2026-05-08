@@ -1,0 +1,9 @@
+[gd_resource type="ShaderMaterial" format=3 uid="uid://chbmtl6yeedxj"]
+
+[ext_resource type="Shader" uid="uid://842ew7xjbltg" path="res://shaders/target.gdshader" id="1_m575j"]
+
+[resource]
+render_priority = 0
+shader = ExtResource("1_m575j")
+shader_parameter/tint_color = Color(1, 1, 1, 1)
+shader_parameter/brightness = 1.0
