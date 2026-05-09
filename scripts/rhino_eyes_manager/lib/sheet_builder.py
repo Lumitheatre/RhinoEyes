@@ -88,18 +88,34 @@ class SheetBuilder:
         # Sheets impacted by tile normalization this run (used to force dependent sheet rebuild)
         self._sheets_with_tile_work: Set[str] = set()
 
-    def get_sheet_tiles_dir(self, sheet_path: str) -> Path:
+    def get_sheet_tiles_dir(self, sheet_path: str, sheet_id: Optional[str] = None) -> Path:
         """Get the tiles directory for a sheet based on its output path.
+        
+        If the manifest sheet entry specifies an intermediates_path attribute,
+        the tiles directory will be placed there instead of the sheet path parent.
 
         Args:
             sheet_path: The output path of the sheet file.
+            sheet_id: Optional sheet ID to look up intermediates_path in config.
 
         Returns:
             Path to the sheet-specific tiles directory.
         """
         sheet_output = Path(sheet_path)
-        sheet_name = sheet_output.stem  # Get filename without extension
-        tiles_dir = sheet_output.parent / f"{sheet_name}_tiles"
+        sheet_name = sheet_output.stem
+        
+        base_dir = sheet_output.parent
+        if sheet_id:
+            sheet_section = f"{SHEET_NS}:{sheet_id}"
+            try:
+                intermediates_path = self.config.get(sheet_section, "intermediates_path", fallback=None)
+                if intermediates_path:
+                    intermediates_path = intermediates_path.strip('"')
+                    base_dir = Path(intermediates_path)
+            except (configparser.NoSectionError, configparser.NoOptionError):
+                pass
+        
+        tiles_dir = base_dir / f"{sheet_name}_tiles"
         tiles_dir.mkdir(parents=True, exist_ok=True)
         return tiles_dir
 
@@ -402,7 +418,7 @@ class SheetBuilder:
 
         # Always compute tiles dirs so downstream sheet building can run even if there are no clips.
         sheet_tiles_dirs: Dict[str, Path] = {
-            sid: self.get_sheet_tiles_dir(data["path"]) for sid, data in self.sheets.items()
+            sid: self.get_sheet_tiles_dir(data["path"], sid) for sid, data in self.sheets.items()
         }
 
         if total_clips_all == 0:
@@ -556,7 +572,7 @@ class SheetBuilder:
         up_to_date = 0
 
         for sid, data in self.sheets.items():
-            tiles_dir = sheet_tiles_dirs.get(sid) or self.get_sheet_tiles_dir(data["path"])
+            tiles_dir = sheet_tiles_dirs.get(sid) or self.get_sheet_tiles_dir(data["path"], sid)
             output_path = Path(data["path"])
 
             if self.regenerate_all or not output_path.exists():
