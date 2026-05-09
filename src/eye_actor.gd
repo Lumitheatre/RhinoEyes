@@ -54,6 +54,10 @@ class_name EyeActor
 
 @export_group("Eye Character")
 
+## Stable ID used by the cue system to address this actor.
+## Defaults to the node name when left empty.
+@export var entity_id: String = ""
+
 @export_storage var character_name: String = "":
     set(val):
         character_name = val
@@ -71,6 +75,11 @@ class_name EyeActor
 
 # References
 var current_video_stream_player: VideoStreamPlayer
+
+# Set to true by transition_to() to suppress auto-tracking during cue-driven angles.
+var track_target: bool = true
+
+var _cue_tween: Tween
 
 func _ready():
     # Set up default plane mesh if none exists
@@ -208,7 +217,10 @@ func _process(_delta):
 func _update_view_angle_to_target() -> void:
     """Poll the EyeManager for target position and update view_angle accordingly.
     Cardinal right (East) on the XY plane is 0 degrees.
+    Skipped when track_target is false (e.g. during a cue transition).
     """
+    if not track_target:
+        return
     var eye_manager = _get_eye_manager()
     if not eye_manager:
         return
@@ -256,7 +268,6 @@ func _wait_for_eye_manager_ready():
 ## Public API for setting character state (useful for runtime)
 func set_character_state(name: String, angle: float, aggrav: int):
     character_name = name
-    view_angle = angle
     aggravation = aggrav
     _update_display()
 
@@ -269,3 +280,41 @@ func set_view_angle(angle: float):
 func set_aggravation(aggrav: int):
     aggravation = aggrav
     _update_display()
+
+# --- CueEntity interface ---
+
+## Returns the stable ID used to address this actor in cue entries.
+func get_entity_id() -> String:
+    return entity_id if entity_id != "" else name
+
+## Captures the current cue-relevant state of this actor as an EyeActorState.
+func capture_state() -> EyeActorState:
+    var state := EyeActorState.new()
+    state.aggravation = aggravation
+    state.opacity_multiplier = opacity_multiplier
+    state.track_target = track_target
+    return state
+
+## Applies an EntityState over [duration] seconds.
+## - view_angle and opacity_multiplier are tweened.
+## - aggravation is snapped immediately.
+## - track_target is applied immediately, suppressing auto-tracking.
+func transition_to(state: EntityState, duration: float) -> void:
+    if not state is EyeActorState:
+        push_error("EyeActor '%s': transition_to received unexpected state type." % name)
+        return
+    var eye_state := state as EyeActorState
+
+    aggravation = eye_state.aggravation
+    track_target = eye_state.track_target
+
+    if _cue_tween:
+        _cue_tween.kill()
+
+    if duration <= 0.0:
+        view_angle = eye_state.view_angle
+        opacity_multiplier = eye_state.opacity_multiplier
+        return
+
+    _cue_tween = create_tween().set_parallel(true)
+    _cue_tween.tween_property(self, "opacity_multiplier", eye_state.opacity_multiplier, duration)
