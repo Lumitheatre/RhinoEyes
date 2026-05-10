@@ -45,6 +45,52 @@ func get_cue_count() -> int:
 func get_current_index() -> int:
     return _current_index
 
+## Get the name of the cue at the given index, or empty string if index is invalid
+func get_cue_name(index: int) -> String:
+    var cues := get_cues()
+    if index < 0 or index >= cues.size():
+        return ""
+    return cues[index].name
+
+## Get the name of the current cue
+func get_current_cue_name() -> String:
+    return get_cue_name(_current_index)
+
+## Get the name of the previous cue (respecting looping)
+func get_previous_cue_name() -> String:
+    var cues := get_cues()
+    if cues.is_empty():
+        return ""
+
+    var prev_index := _current_index - 1
+    if loop_playback:
+        var cue_count := cues.size()
+        if prev_index < loop_start_index:
+            prev_index = cue_count - 1
+    else:
+        if prev_index < 0:
+            return ""
+
+    return get_cue_name(prev_index)
+
+## Get the name of the next cue (respecting looping)
+func get_next_cue_name() -> String:
+    var cues := get_cues()
+    if cues.is_empty():
+        return ""
+
+    var next_index := _current_index + 1
+    if loop_playback:
+        var cue_count := cues.size()
+        var loop_end_index := cue_count - 1
+        if next_index > loop_end_index:
+            next_index = loop_start_index
+    else:
+        if next_index >= cues.size():
+            return ""
+
+    return get_cue_name(next_index)
+
 # --- Cue progression ---
 
 func go_to(index: int, transition_override: float = -1.0) -> void:
