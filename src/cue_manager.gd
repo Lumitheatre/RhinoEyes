@@ -26,11 +26,9 @@ func _input(event: InputEvent) -> void:
     if event.is_action_pressed("cue_next"):
         go_next()
         get_tree().root.set_input_as_handled()
-        print("CueManager: Moved to next cue (index %d)." % _current_index)
     elif event.is_action_pressed("cue_prev"):
         go_previous()
         get_tree().root.set_input_as_handled()
-        print("CueManager: Moved to previous cue (index %d)." % _current_index)
 
 # --- Cue list access ---
 
@@ -91,12 +89,30 @@ func _apply_cue(cue: Cue, transition_override: float = -1.0) -> void:
     for entry: CueEntry in cue.entries:
         if not entry or not entry.state:
             continue
-        print("CueManager: Applying cue entry for entities %s with state %s" % [entry.entity_ids, entry.state])
         for entity_id: String in entry.entity_ids:
             if entity_map.has(entity_id):
                 var entity: Node = entity_map[entity_id]
                 if entity.has_method("transition_to"):
                     entity.transition_to(entry.state, transition_time)
+
+## Preview a cue's states on all entities in the scene (for editor preview)
+func preview_cue_state(cue: Cue) -> void:
+    if not Engine.is_editor_hint():
+        push_warning("CueManager: preview_cue_state only works in the editor.")
+        return
+
+    var entity_map := _build_entity_map()
+
+    # Apply each entry's state to its entities with instant transition
+    for entry: CueEntry in cue.entries:
+        if not entry or not entry.state:
+            continue
+        for entity_id: String in entry.entity_ids:
+            if entity_map.has(entity_id):
+                var entity: Node = entity_map[entity_id]
+                if entity.has_method("transition_to"):
+                    # Use 0 transition time for instant preview in editor
+                    entity.transition_to(entry.state, 0.0)
 
 func _build_entity_map() -> Dictionary:
     var root: Node = entity_root if entity_root else get_tree().root
@@ -114,7 +130,7 @@ func _collect_entities(node: Node, map: Dictionary) -> void:
 
 ## Captures the current state of every selected EyeActor and appends a new Cue child.
 ## Select one or more EyeActor nodes in the editor before pressing this button.
-@export_tool_button("📸 Capture Selected EyeActors as Cue", "Add")
+@export_tool_button("Capture Selected EyeActors as Cue", "Add")
 var _capture_btn: Callable = capture_current_state_as_cue
 
 func get_nodes() -> Array[Node]:
@@ -138,7 +154,9 @@ func capture_current_state_as_cue() -> void:
         if not node.has_method("get_entity_id") or not node.has_method("capture_state"):
             continue
         var entry := CueEntry.new()
-        entry.entity_ids = PackedStringArray([node.get_entity_id()])
+        var id_array: Array[String] = []
+        id_array.append(node.get_entity_id())
+        entry.entity_ids = id_array
         entry.state = node.capture_state()
         entries.append(entry)
 
