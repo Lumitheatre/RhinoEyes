@@ -10,6 +10,9 @@ var destination_pos: Vector3
 ## Movement speed when using action inputs (in units per second)
 @export var action_move_speed: float = 5.0
 
+## Enable/disable boundary constraint
+@export var constrain_to_window: bool = true
+
 var _target_tween: Tween
 
 func _ready() -> void:
@@ -44,9 +47,41 @@ func _handle_action_movement(delta: float) -> void:
     # Apply the movement offset to the destination
     if move_offset != Vector3.ZERO:
         destination_pos += move_offset
+        _clamp_to_window_bounds()
+
+func _clamp_to_window_bounds() -> void:
+    """Restrict the destination position to the window bounds in screen space."""
+    if not constrain_to_window:
+        return
+
+    var cam = get_viewport().get_camera_3d()
+    var viewport_size = get_viewport().get_visible_rect().size
+
+    # Project destination to screen space to check bounds
+    var screen_pos = cam.unproject_position(destination_pos)
+
+    # Clamp to window bounds (0 to viewport_size)
+    screen_pos.x = clamp(screen_pos.x, 0, viewport_size.x)
+    screen_pos.y = clamp(screen_pos.y, 0, viewport_size.y)
+
+    # Project back to world space
+    var ray_origin = cam.project_ray_origin(screen_pos)
+    var ray_dir = cam.project_ray_normal(screen_pos)
+
+    # Intersect with the plane at plane_offset
+    if ray_dir.z != 0:
+        var t = (plane_offset - ray_origin.z) / ray_dir.z
+        destination_pos = ray_origin + ray_dir * t
 
 func update_destination(screen_pos: Vector2) -> void:
     var cam = get_viewport().get_camera_3d()
+    var viewport_size = get_viewport().get_visible_rect().size
+
+    # Clamp screen position to window bounds
+    if constrain_to_window:
+        screen_pos.x = clamp(screen_pos.x, 0, viewport_size.x)
+        screen_pos.y = clamp(screen_pos.y, 0, viewport_size.y)
+
     var ray_origin = cam.project_ray_origin(screen_pos)
     var ray_dir = cam.project_ray_normal(screen_pos)
 
