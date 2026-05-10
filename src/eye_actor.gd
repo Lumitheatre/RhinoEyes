@@ -52,11 +52,14 @@ class_name EyeActor
         flicker_seed = val
         _set_material_uniform("flicker_seed", flicker_seed)
 
-@export_group("Eye Character")
+@export_group("Cue System")
 
 ## Stable ID used by the cue system to address this actor.
-## Defaults to the node name when left empty.
+## Gets set to the node name onready if empty
+## Do not change this at runtime or cues will fail to find the actor!
 @export var entity_id: String = ""
+
+@export_group("Eye Character")
 
 @export_storage var character_name: String = "":
     set(val):
@@ -90,6 +93,10 @@ func _ready():
 
     _setup_material()
     _sync_all_proxy_properties()
+
+    if entity_id == "":
+        entity_id = name
+
     await _wait_for_eye_manager_ready()
     # print("Current character %s, angle %f, aggravation %d" % [character_name, view_angle, aggravation])
     _update_display()
@@ -146,7 +153,6 @@ func _request_video_and_update():
 
     var eye_manager = _get_eye_manager()
     if not eye_manager:
-        push_error("EyeActor: Could not find EyeManager node. Make sure it's in the scene with unique name '%EyeManager'")
         return
 
     var result = eye_manager.get_video_texture_and_uvs(character_name, view_angle, aggravation)
@@ -266,8 +272,8 @@ func _wait_for_eye_manager_ready():
         await eye_manager.ready
 
 ## Public API for setting character state (useful for runtime)
-func set_character_state(name: String, angle: float, aggrav: int):
-    character_name = name
+func set_character_state(char_name: String, aggrav: int):
+    character_name = char_name
     aggravation = aggrav
     _update_display()
 
@@ -285,7 +291,9 @@ func set_aggravation(aggrav: int):
 
 ## Returns the stable ID used to address this actor in cue entries.
 func get_entity_id() -> String:
-    return entity_id if entity_id != "" else name
+    if entity_id == "":
+        push_error("EyeActor '%s': entity_id is empty" % name)
+    return entity_id
 
 ## Captures the current cue-relevant state of this actor as an EyeActorState.
 func capture_state() -> EyeActorState:
@@ -312,7 +320,6 @@ func transition_to(state: EntityState, duration: float) -> void:
         _cue_tween.kill()
 
     if duration <= 0.0:
-        view_angle = eye_state.view_angle
         opacity_multiplier = eye_state.opacity_multiplier
         return
 

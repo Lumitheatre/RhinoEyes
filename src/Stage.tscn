@@ -5,6 +5,7 @@
 [ext_resource type="Shader" uid="uid://bo5kmp1540awj" path="res://shaders/eye_sprite.gdshader" id="3_cel86"]
 [ext_resource type="Script" uid="uid://brvjdnnvv2hyx" path="res://src/eye_actor.gd" id="4_tsohr"]
 [ext_resource type="Environment" uid="uid://c16o62kclc4ds" path="res://src/StageEnvironment.tres" id="5_7gd3w"]
+[ext_resource type="Script" uid="uid://157qm6q12nyk" path="res://src/eye_target.gd" id="6_enulu"]
 [ext_resource type="Shader" uid="uid://842ew7xjbltg" path="res://shaders/target.gdshader" id="6_ub6vd"]
 [ext_resource type="Texture2D" uid="uid://l7sxckewlv3t" path="res://assets/berenger.png" id="7_cel86"]
 [ext_resource type="Script" uid="uid://ccs2sxv1m7q6m" path="res://src/cue_manager.gd" id="8_6bbl5"]
@@ -44,7 +45,7 @@ shader_parameter/exposure = 1.17
 shader_parameter/contrast = 1.78
 shader_parameter/emission_strength = 1.15
 shader_parameter/tint = Color(1, 1, 1, 1)
-shader_parameter/opacity_multiplier = 0.0
+shader_parameter/opacity_multiplier = 1.0
 shader_parameter/enable_flicker = true
 shader_parameter/flicker_frequency = 15.0
 shader_parameter/flicker_amplitude = 0.08
@@ -54,7 +55,7 @@ shader_parameter/flicker_seed = 43758.5453
 render_priority = 0
 shader = ExtResource("3_cel86")
 shader_parameter/video_texture = SubResource("Texture2DRD_6bbl5")
-shader_parameter/uv_offset = Vector2(0, 0.75)
+shader_parameter/uv_offset = Vector2(0.625, 0.75)
 shader_parameter/uv_scale = Vector2(0.0625, 0.0625)
 shader_parameter/tile_aspect_ratio = 1.7777777777777777
 shader_parameter/exposure = 1.17
@@ -73,7 +74,7 @@ shader_parameter/flicker_seed = 43758.5453
 render_priority = 0
 shader = ExtResource("3_cel86")
 shader_parameter/video_texture = SubResource("Texture2DRD_hdod2")
-shader_parameter/uv_offset = Vector2(0.375, 0)
+shader_parameter/uv_offset = Vector2(0.0625, 0.0625)
 shader_parameter/uv_scale = Vector2(0.0625, 0.0625)
 shader_parameter/tile_aspect_ratio = 1.7777777777777777
 shader_parameter/exposure = 1.17
@@ -107,7 +108,7 @@ shader_parameter/flicker_seed = 43758.5453
 render_priority = 0
 shader = ExtResource("3_cel86")
 shader_parameter/video_texture = SubResource("Texture2DRD_6bbl5")
-shader_parameter/uv_offset = Vector2(0.8125, 0.0625)
+shader_parameter/uv_offset = Vector2(0.5625, 0)
 shader_parameter/uv_scale = Vector2(0.0625, 0.0625)
 shader_parameter/tile_aspect_ratio = 1.7777777777777777
 shader_parameter/exposure = 1.17
@@ -141,7 +142,7 @@ shader_parameter/flicker_seed = 43758.5453
 render_priority = 0
 shader = ExtResource("3_cel86")
 shader_parameter/video_texture = SubResource("Texture2DRD_6bbl5")
-shader_parameter/uv_offset = Vector2(0, 0.5)
+shader_parameter/uv_offset = Vector2(0.125, 0.5)
 shader_parameter/uv_scale = Vector2(0.0625, 0.0625)
 shader_parameter/tile_aspect_ratio = 1.7777777777777777
 shader_parameter/exposure = 1.02
@@ -158,7 +159,7 @@ shader_parameter/flicker_seed = 43758.5453
 render_priority = 0
 shader = ExtResource("3_cel86")
 shader_parameter/video_texture = SubResource("Texture2DRD_6bbl5")
-shader_parameter/uv_offset = Vector2(0.75, 0.625)
+shader_parameter/uv_offset = Vector2(0.25, 0.625)
 shader_parameter/uv_scale = Vector2(0.0625, 0.0625)
 shader_parameter/tile_aspect_ratio = 1.7777777777777777
 shader_parameter/exposure = 1.17
@@ -175,7 +176,7 @@ shader_parameter/flicker_seed = 43758.5453
 render_priority = 0
 shader = ExtResource("3_cel86")
 shader_parameter/video_texture = SubResource("Texture2DRD_hdod2")
-shader_parameter/uv_offset = Vector2(0.125, 0.5)
+shader_parameter/uv_offset = Vector2(0, 0.5625)
 shader_parameter/uv_scale = Vector2(0.0625, 0.0625)
 shader_parameter/tile_aspect_ratio = 1.7777777777777777
 shader_parameter/exposure = 1.17
@@ -192,14 +193,14 @@ shader_parameter/flicker_seed = 43758.5453
 render_priority = 0
 shader = ExtResource("3_cel86")
 shader_parameter/video_texture = SubResource("Texture2DRD_hdod2")
-shader_parameter/uv_offset = Vector2(0.5, 0.25)
+shader_parameter/uv_offset = Vector2(0.0625, 0.3125)
 shader_parameter/uv_scale = Vector2(0.0625, 0.0625)
 shader_parameter/tile_aspect_ratio = 1.7777777777777777
 shader_parameter/exposure = 1.17
 shader_parameter/contrast = 1.78
 shader_parameter/emission_strength = 1.15
 shader_parameter/tint = Color(1, 1, 1, 1)
-shader_parameter/opacity_multiplier = 0.0
+shader_parameter/opacity_multiplier = 1.0
 shader_parameter/enable_flicker = true
 shader_parameter/flicker_frequency = 15.0
 shader_parameter/flicker_amplitude = 0.08
@@ -209,7 +210,7 @@ shader_parameter/flicker_seed = 43758.5453
 render_priority = 0
 shader = ExtResource("3_cel86")
 shader_parameter/video_texture = SubResource("Texture2DRD_hdod2")
-shader_parameter/uv_offset = Vector2(0.4375, 0.375)
+shader_parameter/uv_offset = Vector2(0.375, 0.375)
 shader_parameter/uv_scale = Vector2(0.0625, 0.0625)
 shader_parameter/tile_aspect_ratio = 1.7777777777777777
 shader_parameter/exposure = 1.17
@@ -226,7 +227,7 @@ shader_parameter/flicker_seed = 43758.5453
 render_priority = 0
 shader = ExtResource("3_cel86")
 shader_parameter/video_texture = SubResource("Texture2DRD_hdod2")
-shader_parameter/uv_offset = Vector2(0.9375, 0.125)
+shader_parameter/uv_offset = Vector2(0.75, 0.125)
 shader_parameter/uv_scale = Vector2(0.0625, 0.0625)
 shader_parameter/tile_aspect_ratio = 1.7777777777777777
 shader_parameter/exposure = 1.17
@@ -248,8 +249,23 @@ shader_parameter/albedo_texture = ExtResource("7_cel86")
 
 [sub_resource type="QuadMesh" id="QuadMesh_8ruf2"]
 
+[sub_resource type="Resource" id="Resource_6bbl5"]
+script = ExtResource("11_mn1vq")
+
+[sub_resource type="Resource" id="Resource_enulu"]
+script = ExtResource("10_opo57")
+state = SubResource("Resource_6bbl5")
+
+[sub_resource type="Resource" id="Resource_opo57"]
+script = ExtResource("11_mn1vq")
+
+[sub_resource type="Resource" id="Resource_mn1vq"]
+script = ExtResource("10_opo57")
+state = SubResource("Resource_opo57")
+
 [sub_resource type="Resource" id="Resource_hdod2"]
 script = ExtResource("11_mn1vq")
+opacity_multiplier = 0.0
 
 [sub_resource type="Resource" id="Resource_8n1kj"]
 script = ExtResource("10_opo57")
@@ -257,6 +273,7 @@ state = SubResource("Resource_hdod2")
 
 [sub_resource type="Resource" id="Resource_cenub"]
 script = ExtResource("11_mn1vq")
+opacity_multiplier = 0.0
 
 [sub_resource type="Resource" id="Resource_ngm0a"]
 script = ExtResource("10_opo57")
@@ -278,6 +295,7 @@ state = SubResource("Resource_2d4lh")
 
 [sub_resource type="Resource" id="Resource_2edsn"]
 script = ExtResource("11_mn1vq")
+aggravation = 3
 
 [sub_resource type="Resource" id="Resource_sy7vh"]
 script = ExtResource("10_opo57")
@@ -292,7 +310,6 @@ state = SubResource("Resource_okm8p")
 
 [sub_resource type="Resource" id="Resource_yyj4p"]
 script = ExtResource("11_mn1vq")
-aggravation = 3
 
 [sub_resource type="Resource" id="Resource_g7x88"]
 script = ExtResource("10_opo57")
@@ -314,6 +331,7 @@ state = SubResource("Resource_r2iva")
 
 [sub_resource type="Resource" id="Resource_dlckv"]
 script = ExtResource("11_mn1vq")
+opacity_multiplier = 0.0
 
 [sub_resource type="Resource" id="Resource_e4xt1"]
 script = ExtResource("10_opo57")
@@ -349,6 +367,7 @@ state = SubResource("Resource_87i2w")
 
 [sub_resource type="Resource" id="Resource_0f5sd"]
 script = ExtResource("11_mn1vq")
+opacity_multiplier = 0.0
 
 [sub_resource type="Resource" id="Resource_6kefk"]
 script = ExtResource("10_opo57")
@@ -356,7 +375,6 @@ state = SubResource("Resource_0f5sd")
 
 [sub_resource type="Resource" id="Resource_4ntve"]
 script = ExtResource("11_mn1vq")
-opacity_multiplier = 0.0
 
 [sub_resource type="Resource" id="Resource_0u2lv"]
 script = ExtResource("10_opo57")
@@ -364,7 +382,6 @@ state = SubResource("Resource_4ntve")
 
 [sub_resource type="Resource" id="Resource_odfey"]
 script = ExtResource("11_mn1vq")
-opacity_multiplier = 0.0
 
 [sub_resource type="Resource" id="Resource_l5rhp"]
 script = ExtResource("10_opo57")
@@ -372,6 +389,7 @@ state = SubResource("Resource_odfey")
 
 [sub_resource type="Resource" id="Resource_d02in"]
 script = ExtResource("11_mn1vq")
+aggravation = 3
 
 [sub_resource type="Resource" id="Resource_8f7ew"]
 script = ExtResource("10_opo57")
@@ -386,7 +404,6 @@ state = SubResource("Resource_vq03d")
 
 [sub_resource type="Resource" id="Resource_pc42f"]
 script = ExtResource("11_mn1vq")
-aggravation = 3
 
 [sub_resource type="Resource" id="Resource_cicpm"]
 script = ExtResource("10_opo57")
@@ -420,21 +437,6 @@ script = ExtResource("11_mn1vq")
 script = ExtResource("10_opo57")
 state = SubResource("Resource_n0701")
 
-[sub_resource type="Resource" id="Resource_sjsxa"]
-script = ExtResource("11_mn1vq")
-opacity_multiplier = 0.0
-
-[sub_resource type="Resource" id="Resource_ej0dh"]
-script = ExtResource("10_opo57")
-state = SubResource("Resource_sjsxa")
-
-[sub_resource type="Resource" id="Resource_8ki8w"]
-script = ExtResource("11_mn1vq")
-
-[sub_resource type="Resource" id="Resource_6snnm"]
-script = ExtResource("10_opo57")
-state = SubResource("Resource_8ki8w")
-
 [node name="Node3D" type="Node3D" unique_id=924618023]
 
 [node name="WorldEnvironment" type="WorldEnvironment" parent="." unique_id=225443107]
@@ -447,14 +449,12 @@ projection = 1
 current = true
 size = 3.0
 
-[node name="EyeManager" type="Node" parent="." unique_id=2021950246 node_paths=PackedStringArray("target_node")]
+[node name="EyeManager" type="Node" parent="." unique_id=2021950246]
 script = ExtResource("1_nxjac")
 manifest = ExtResource("2_ub6vd")
-target_node = NodePath("Target")
-target_lerp_speed = 0.5
 metadata/_custom_type_script = "uid://cteeeb0bmtmg5"
 
-[node name="EyeActor" type="MeshInstance3D" parent="EyeManager" unique_id=2021718081]
+[node name="EyeActor1" type="MeshInstance3D" parent="EyeManager" unique_id=2021718081]
 transform = Transform3D(0.49, 0, 0, 0, -2.141858e-08, -0.49, 0, 0.49, -2.141858e-08, -2.1147628, 1.1567221, 0)
 material_override = SubResource("ShaderMaterial_enulu")
 mesh = SubResource("PlaneMesh_hrmib")
@@ -462,8 +462,9 @@ script = ExtResource("4_tsohr")
 exposure = 1.17
 contrast = 1.78
 emission_strength = 1.15
+entity_id = "EyeActor1"
 character_name = "Dasha"
-view_angle = 303.0
+view_angle = 331.0
 metadata/_custom_type_script = "uid://brvjdnnvv2hyx"
 
 [node name="EyeActor7" type="MeshInstance3D" parent="EyeManager" unique_id=824714467]
@@ -474,9 +475,9 @@ script = ExtResource("4_tsohr")
 exposure = 1.17
 contrast = 1.78
 emission_strength = 1.15
-opacity_multiplier = 0.0
+entity_id = "EyeActor7"
 character_name = "Katya"
-view_angle = 257.0
+view_angle = 270.0
 metadata/_custom_type_script = "uid://brvjdnnvv2hyx"
 
 [node name="EyeActor9" type="MeshInstance3D" parent="EyeManager" unique_id=800783043]
@@ -487,8 +488,9 @@ script = ExtResource("4_tsohr")
 exposure = 1.17
 contrast = 1.78
 emission_strength = 1.15
+entity_id = "EyeActor9"
 character_name = "Artyom"
-view_angle = 249.0
+view_angle = 256.0
 metadata/_custom_type_script = "uid://brvjdnnvv2hyx"
 
 [node name="EyeActor8" type="MeshInstance3D" parent="EyeManager" unique_id=1677630707]
@@ -499,8 +501,9 @@ script = ExtResource("4_tsohr")
 exposure = 1.17
 contrast = 1.78
 emission_strength = 1.15
+entity_id = "EyeActor8"
 character_name = "Kostya"
-view_angle = 251.0
+view_angle = 294.0
 metadata/_custom_type_script = "uid://brvjdnnvv2hyx"
 
 [node name="EyeActor2" type="MeshInstance3D" parent="EyeManager" unique_id=64907441]
@@ -511,8 +514,9 @@ script = ExtResource("4_tsohr")
 exposure = 1.02
 contrast = 1.78
 emission_strength = 1.0
+entity_id = "EyeActor2"
 character_name = "Dina"
-view_angle = 223.0
+view_angle = 209.0
 metadata/_custom_type_script = "uid://brvjdnnvv2hyx"
 
 [node name="EyeActor3" type="MeshInstance3D" parent="EyeManager" unique_id=921557969]
@@ -523,8 +527,9 @@ script = ExtResource("4_tsohr")
 exposure = 1.17
 contrast = 1.78
 emission_strength = 1.15
+entity_id = "EyeActor3"
 character_name = "Alisa"
-view_angle = 308.0
+view_angle = 342.0
 metadata/_custom_type_script = "uid://brvjdnnvv2hyx"
 
 [node name="EyeActor4" type="MeshInstance3D" parent="EyeManager" unique_id=1194612402]
@@ -535,8 +540,9 @@ script = ExtResource("4_tsohr")
 exposure = 1.17
 contrast = 1.78
 emission_strength = 1.15
+entity_id = "EyeActor4"
 character_name = "Sergey"
-view_angle = 213.0
+view_angle = 191.0
 aggravation = 3
 metadata/_custom_type_script = "uid://brvjdnnvv2hyx"
 
@@ -548,8 +554,9 @@ script = ExtResource("4_tsohr")
 exposure = 1.02
 contrast = 1.78
 emission_strength = 1.0
+entity_id = "EyeActor5"
 character_name = "Dyadya Vova"
-view_angle = 202.0
+view_angle = 172.0
 metadata/_custom_type_script = "uid://brvjdnnvv2hyx"
 
 [node name="EyeActor6" type="MeshInstance3D" parent="EyeManager" unique_id=924590995]
@@ -560,8 +567,9 @@ script = ExtResource("4_tsohr")
 exposure = 1.17
 contrast = 1.78
 emission_strength = 1.15
+entity_id = "EyeActor6"
 character_name = "Vitaliy"
-view_angle = 192.0
+view_angle = 161.0
 metadata/_custom_type_script = "uid://brvjdnnvv2hyx"
 
 [node name="EyeActor10" type="MeshInstance3D" parent="EyeManager" unique_id=1531924818]
@@ -573,8 +581,9 @@ exposure = 1.17
 contrast = 1.78
 emission_strength = 1.15
 opacity_multiplier = 0.0
+entity_id = "EyeActor10"
 character_name = "Zhenya"
-view_angle = 234.0
+view_angle = 94.0
 metadata/_custom_type_script = "uid://brvjdnnvv2hyx"
 
 [node name="EyeActor11" type="MeshInstance3D" parent="EyeManager" unique_id=292438152]
@@ -585,9 +594,9 @@ script = ExtResource("4_tsohr")
 exposure = 1.17
 contrast = 1.78
 emission_strength = 1.15
-opacity_multiplier = 0.0
+entity_id = "EyeActor11"
 character_name = "Oksana"
-view_angle = 316.0
+view_angle = 355.0
 metadata/_custom_type_script = "uid://brvjdnnvv2hyx"
 
 [node name="EyeActor12" type="MeshInstance3D" parent="EyeManager" unique_id=867975701]
@@ -598,8 +607,9 @@ script = ExtResource("4_tsohr")
 exposure = 1.17
 contrast = 1.78
 emission_strength = 1.15
+entity_id = "EyeActor12"
 character_name = "Sasha"
-view_angle = 328.0
+view_angle = 8.0
 metadata/_custom_type_script = "uid://brvjdnnvv2hyx"
 
 [node name="EyeActor13" type="MeshInstance3D" parent="EyeManager" unique_id=884111087]
@@ -610,12 +620,16 @@ script = ExtResource("4_tsohr")
 exposure = 1.17
 contrast = 1.78
 emission_strength = 1.15
+entity_id = "EyeActor13"
 character_name = "Nadya"
-view_angle = 341.0
+view_angle = 24.0
 metadata/_custom_type_script = "uid://brvjdnnvv2hyx"
 
 [node name="Target" type="Node3D" parent="EyeManager" unique_id=507729988]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.5483248, -1.2251701, 0)
+script = ExtResource("6_enulu")
+lerp_speed = 2.5
+action_move_speed = 2.5
 
 [node name="Misha" type="MeshInstance3D" parent="EyeManager/Target" unique_id=82147127]
 transform = Transform3D(0.5, 0, 0, 0, 0.5, 0, 0, 0, 0.5, 0.08230114, -0.095677495, 0)
@@ -626,10 +640,10 @@ metadata/_edit_lock_ = true
 [node name="CueManager" type="Node" parent="." unique_id=1620651930]
 script = ExtResource("8_6bbl5")
 
-[node name="Cue1" type="Node" parent="CueManager" unique_id=1448784148]
+[node name="Cue1" type="Node" parent="CueManager" unique_id=381360428]
 script = ExtResource("9_enulu")
-entries = Array[ExtResource("10_opo57")]([SubResource("Resource_8n1kj"), SubResource("Resource_ngm0a"), SubResource("Resource_8ruf2"), SubResource("Resource_8kp3n"), SubResource("Resource_sy7vh"), SubResource("Resource_ofypg"), SubResource("Resource_g7x88"), SubResource("Resource_sdnq1"), SubResource("Resource_3q05w"), SubResource("Resource_e4xt1"), SubResource("Resource_b2gng"), SubResource("Resource_72b7t"), SubResource("Resource_8onx3")])
+entries = Array[ExtResource("10_opo57")]([SubResource("Resource_enulu"), SubResource("Resource_mn1vq"), SubResource("Resource_8n1kj"), SubResource("Resource_ngm0a"), SubResource("Resource_8ruf2"), SubResource("Resource_8kp3n"), SubResource("Resource_sy7vh"), SubResource("Resource_ofypg"), SubResource("Resource_g7x88"), SubResource("Resource_sdnq1"), SubResource("Resource_3q05w"), SubResource("Resource_e4xt1"), SubResource("Resource_b2gng")])
 
-[node name="Cue2" type="Node" parent="CueManager" unique_id=1965183896]
+[node name="Cue2" type="Node" parent="CueManager" unique_id=1997529550]
 script = ExtResource("9_enulu")
-entries = Array[ExtResource("10_opo57")]([SubResource("Resource_dhnp8"), SubResource("Resource_6kefk"), SubResource("Resource_0u2lv"), SubResource("Resource_l5rhp"), SubResource("Resource_8f7ew"), SubResource("Resource_732bl"), SubResource("Resource_cicpm"), SubResource("Resource_4uqhd"), SubResource("Resource_km53o"), SubResource("Resource_1ndgb"), SubResource("Resource_he561"), SubResource("Resource_ej0dh"), SubResource("Resource_6snnm")])
+entries = Array[ExtResource("10_opo57")]([SubResource("Resource_72b7t"), SubResource("Resource_8onx3"), SubResource("Resource_dhnp8"), SubResource("Resource_6kefk"), SubResource("Resource_0u2lv"), SubResource("Resource_l5rhp"), SubResource("Resource_8f7ew"), SubResource("Resource_732bl"), SubResource("Resource_cicpm"), SubResource("Resource_4uqhd"), SubResource("Resource_km53o"), SubResource("Resource_1ndgb"), SubResource("Resource_he561")])

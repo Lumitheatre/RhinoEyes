@@ -20,7 +20,7 @@ func _ready() -> void:
     if Engine.is_editor_hint():
         return
     if get_cue_count() > 0:
-        go_to(0)
+        go_to_immediately(0)
 
 func _input(event: InputEvent) -> void:
     if event.is_action_pressed("cue_next"):
@@ -49,7 +49,7 @@ func get_current_index() -> int:
 
 # --- Cue progression ---
 
-func go_to(index: int) -> void:
+func go_to(index: int, transition_override: float = -1.0) -> void:
     var cues := get_cues()
     if cues.is_empty():
         push_warning("CueManager: No Cue children found.")
@@ -70,8 +70,11 @@ func go_to(index: int) -> void:
 
     _current_index = index
     var cue: Cue = cues[index]
-    _apply_cue(cue)
+    _apply_cue(cue, transition_override)
     cue_changed.emit(_current_index, cue)
+
+func go_to_immediately(index: int) -> void:
+    go_to(index, 0.0)
 
 func go_next() -> void:
     go_to(_current_index + 1)
@@ -81,16 +84,19 @@ func go_previous() -> void:
 
 # --- Application ---
 
-func _apply_cue(cue: Cue) -> void:
+func _apply_cue(cue: Cue, transition_override: float = -1.0) -> void:
     var entity_map := _build_entity_map()
+    # Use override if provided (>= 0), otherwise use cue's transition time
+    var transition_time := cue.transition_time if transition_override < 0.0 else transition_override
     for entry: CueEntry in cue.entries:
         if not entry or not entry.state:
             continue
+        print("CueManager: Applying cue entry for entities %s with state %s" % [entry.entity_ids, entry.state])
         for entity_id: String in entry.entity_ids:
             if entity_map.has(entity_id):
                 var entity: Node = entity_map[entity_id]
                 if entity.has_method("transition_to"):
-                    entity.transition_to(entry.state, cue.transition_time)
+                    entity.transition_to(entry.state, transition_time)
 
 func _build_entity_map() -> Dictionary:
     var root: Node = entity_root if entity_root else get_tree().root

@@ -20,15 +20,7 @@ func _exit_tree():
 @export_group("Target Tracking")
 
 ## This is the target the transform of which the eyes follow
-@export var target_node: Node3D
-
-# This is the position in world space the target_node is seeking to reach
-var destination_pos: Vector3
-
-@export var target_lerp_speed: float = 5.0
-@export var target_plane_offset: float = 0.0 # The height of the "stage" floor
-
-var _target_tween: Tween
+@export var target_node: EyeTarget
 
 func _get_configuration_warnings() -> PackedStringArray:
     var warnings = PackedStringArray()
@@ -52,31 +44,8 @@ func _ready():
 
 func get_target_position() -> Vector3:
     if target_node:
-        return target_node.global_transform.origin
-    return destination_pos
-
-func _input(event):
-    # Handle Mouse Click or Touchscreen Tap
-    if event is InputEventMouseButton or event is InputEventScreenTouch:
-        if event.pressed:
-            update_destination(event.position)
-
-func _process(delta):
-    # Continuously tween towards the destination position for smooth movement
-    if target_node and destination_pos:
-        var current_pos = target_node.global_transform.origin
-        target_node.global_transform.origin = current_pos.lerp(destination_pos, target_lerp_speed * delta)
-
-func update_destination(screen_pos: Vector2):
-    var cam = get_viewport().get_camera_3d()
-    var ray_origin = cam.project_ray_origin(screen_pos)
-    var ray_dir = cam.project_ray_normal(screen_pos)
-
-    # Project the click onto the XY plane (Z = 0)
-    # Intersection of ray and plane: t = -origin.z / dir.z
-    if ray_dir.z != 0:
-        var t = (target_plane_offset - ray_origin.z) / ray_dir.z
-        destination_pos = ray_origin + ray_dir * t
+        return target_node.global_position
+    return Vector3.ZERO
 
 ## Get list of available actor names from the manifest
 func get_actor_names() -> PackedStringArray:
