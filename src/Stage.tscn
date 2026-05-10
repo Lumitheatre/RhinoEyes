@@ -1,6 +1,7 @@
 [gd_scene format=3 uid="uid://chkvgxs8328fx"]
 
 [ext_resource type="Script" uid="uid://cteeeb0bmtmg5" path="res://src/eye_manager.gd" id="1_nxjac"]
+[ext_resource type="Script" uid="uid://bmtemnd6ympam" path="res://src/main.gd" id="1_opo57"]
 [ext_resource type="Resource" uid="uid://blyi08radsybv" path="res://src/eye_manifest.v2.tres" id="2_ub6vd"]
 [ext_resource type="Shader" uid="uid://bo5kmp1540awj" path="res://shaders/eye_sprite.gdshader" id="3_cel86"]
 [ext_resource type="Script" uid="uid://brvjdnnvv2hyx" path="res://src/eye_actor.gd" id="4_tsohr"]
@@ -463,7 +464,8 @@ script = ExtResource("10_opo57")
 entity_ids = Array[String](["EyeActor1"])
 state = SubResource("Resource_he561")
 
-[node name="Node3D" type="Node3D" unique_id=924618023]
+[node name="Main" type="Node3D" unique_id=924618023]
+script = ExtResource("1_opo57")
 
 [node name="WorldEnvironment" type="WorldEnvironment" parent="." unique_id=225443107]
 environment = ExtResource("5_7gd3w")
@@ -483,6 +485,7 @@ metadata/_custom_type_script = "uid://cteeeb0bmtmg5"
 
 [node name="EyeActor1" type="MeshInstance3D" parent="EyeManager" unique_id=2021718081]
 transform = Transform3D(0.49, 0, 0, 0, -2.141858e-08, -0.49, 0, 0.49, -2.141858e-08, -2.1147628, 1.1567221, 0)
+layers = 3
 material_override = SubResource("ShaderMaterial_opo57")
 mesh = SubResource("PlaneMesh_hrmib")
 script = ExtResource("4_tsohr")
@@ -496,6 +499,7 @@ metadata/_custom_type_script = "uid://brvjdnnvv2hyx"
 
 [node name="EyeActor7" type="MeshInstance3D" parent="EyeManager" unique_id=824714467]
 transform = Transform3D(0.49, 0, 0, 0, -2.141858e-08, -0.49, 0, 0.49, -2.141858e-08, -0.0014024973, 1.1807091, 0)
+layers = 3
 material_override = SubResource("ShaderMaterial_mn1vq")
 mesh = SubResource("PlaneMesh_hrmib")
 script = ExtResource("4_tsohr")
@@ -510,6 +514,7 @@ metadata/_custom_type_script = "uid://brvjdnnvv2hyx"
 
 [node name="EyeActor9" type="MeshInstance3D" parent="EyeManager" unique_id=800783043]
 transform = Transform3D(0.49, 0, 0, 0, -2.141858e-08, -0.49, 0, 0.49, -2.141858e-08, 0.16632283, 0.6742904, 0)
+layers = 3
 material_override = SubResource("ShaderMaterial_hdod2")
 mesh = SubResource("PlaneMesh_hrmib")
 script = ExtResource("4_tsohr")
@@ -523,6 +528,7 @@ metadata/_custom_type_script = "uid://brvjdnnvv2hyx"
 
 [node name="EyeActor8" type="MeshInstance3D" parent="EyeManager" unique_id=1677630707]
 transform = Transform3D(0.49, 0, 0, 0, -2.141858e-08, -0.49, 0, 0.49, -2.141858e-08, -0.06392415, 0.14376783, 0)
+layers = 3
 material_override = SubResource("ShaderMaterial_cenub")
 mesh = SubResource("PlaneMesh_hrmib")
 script = ExtResource("4_tsohr")
@@ -537,6 +543,7 @@ metadata/_custom_type_script = "uid://brvjdnnvv2hyx"
 
 [node name="EyeActor2" type="MeshInstance3D" parent="EyeManager" unique_id=64907441]
 transform = Transform3D(0.49, 0, 0, 0, -2.141858e-08, -0.49, 0, 0.49, -2.141858e-08, 1.8605518, 1.03899, 0)
+layers = 3
 material_override = SubResource("ShaderMaterial_ngm0a")
 mesh = SubResource("PlaneMesh_hrmib")
 script = ExtResource("4_tsohr")
@@ -550,6 +557,7 @@ metadata/_custom_type_script = "uid://brvjdnnvv2hyx"
 
 [node name="EyeActor3" type="MeshInstance3D" parent="EyeManager" unique_id=921557969]
 transform = Transform3D(0.49, 0, 0, 0, -2.141858e-08, -0.49, 0, 0.49, -2.141858e-08, -1.9936497, 0.65425265, 0)
+layers = 3
 material_override = SubResource("ShaderMaterial_7k5a8")
 mesh = SubResource("PlaneMesh_hrmib")
 script = ExtResource("4_tsohr")
@@ -563,6 +571,7 @@ metadata/_custom_type_script = "uid://brvjdnnvv2hyx"
 
 [node name="EyeActor4" type="MeshInstance3D" parent="EyeManager" unique_id=1194612402]
 transform = Transform3D(0.49, 0, 0, 0, -2.141858e-08, -0.49, 0, 0.49, -2.141858e-08, 1.9257789, 0.36373454, 0)
+layers = 3
 material_override = SubResource("ShaderMaterial_8ruf2")
 mesh = SubResource("PlaneMesh_hrmib")
 script = ExtResource("4_tsohr")
@@ -577,6 +586,7 @@ metadata/_custom_type_script = "uid://brvjdnnvv2hyx"
 
 [node name="EyeActor5" type="MeshInstance3D" parent="EyeManager" unique_id=1356393547]
 transform = Transform3D(0.49, 0, 0, 0, -2.141858e-08, -0.49, 0, 0.49, -2.141858e-08, 1.8526006, -0.2642854, 0)
+layers = 3
 material_override = SubResource("ShaderMaterial_2d4lh")
 mesh = SubResource("PlaneMesh_hrmib")
 script = ExtResource("4_tsohr")
@@ -590,6 +600,7 @@ metadata/_custom_type_script = "uid://brvjdnnvv2hyx"
 
 [node name="EyeActor6" type="MeshInstance3D" parent="EyeManager" unique_id=924590995]
 transform = Transform3D(0.49, 0, 0, 0, -2.141858e-08, -0.49, 0, 0.49, -2.141858e-08, 2.03088, -0.6829704, 0)
+layers = 3
 material_override = SubResource("ShaderMaterial_8kp3n")
 mesh = SubResource("PlaneMesh_hrmib")
 script = ExtResource("4_tsohr")
@@ -603,6 +614,7 @@ metadata/_custom_type_script = "uid://brvjdnnvv2hyx"
 
 [node name="EyeActor10" type="MeshInstance3D" parent="EyeManager" unique_id=1531924818]
 transform = Transform3D(0.49, 0, 0, 0, -2.141858e-08, -0.49, 0, 0.49, -2.141858e-08, 0.030878454, -0.43852603, 0)
+layers = 3
 material_override = SubResource("ShaderMaterial_2edsn")
 mesh = SubResource("PlaneMesh_hrmib")
 script = ExtResource("4_tsohr")
@@ -617,6 +629,7 @@ metadata/_custom_type_script = "uid://brvjdnnvv2hyx"
 
 [node name="EyeActor11" type="MeshInstance3D" parent="EyeManager" unique_id=292438152]
 transform = Transform3D(0.49, 0, 0, 0, -2.141858e-08, -0.49, 0, 0.49, -2.141858e-08, -2.0313454, 0.18814147, 0)
+layers = 3
 material_override = SubResource("ShaderMaterial_sy7vh")
 mesh = SubResource("PlaneMesh_hrmib")
 script = ExtResource("4_tsohr")
@@ -630,6 +643,7 @@ metadata/_custom_type_script = "uid://brvjdnnvv2hyx"
 
 [node name="EyeActor12" type="MeshInstance3D" parent="EyeManager" unique_id=867975701]
 transform = Transform3D(0.49, 0, 0, 0, -2.141858e-08, -0.49, 0, 0.49, -2.141858e-08, -2.022457, -0.2918588, 0)
+layers = 3
 material_override = SubResource("ShaderMaterial_okm8p")
 mesh = SubResource("PlaneMesh_hrmib")
 script = ExtResource("4_tsohr")
@@ -643,6 +657,7 @@ metadata/_custom_type_script = "uid://brvjdnnvv2hyx"
 
 [node name="EyeActor13" type="MeshInstance3D" parent="EyeManager" unique_id=884111087]
 transform = Transform3D(0.49, 0, 0, 0, -2.141858e-08, -0.49, 0, 0.49, -2.141858e-08, -1.7869011, -0.79852617, 0)
+layers = 3
 material_override = SubResource("ShaderMaterial_ofypg")
 mesh = SubResource("PlaneMesh_hrmib")
 script = ExtResource("4_tsohr")
@@ -676,3 +691,16 @@ entries = Array[ExtResource("10_opo57")]([SubResource("Resource_opo57"), SubReso
 [node name="Cue2" type="Node" parent="CueManager" unique_id=1074086044]
 script = ExtResource("9_enulu")
 entries = Array[ExtResource("10_opo57")]([SubResource("Resource_6ipsp"), SubResource("Resource_87i2w"), SubResource("Resource_0f5sd"), SubResource("Resource_4ntve"), SubResource("Resource_odfey"), SubResource("Resource_d02in"), SubResource("Resource_vq03d"), SubResource("Resource_pc42f"), SubResource("Resource_ektxs"), SubResource("Resource_3yrhl"), SubResource("Resource_bgfct"), SubResource("Resource_n0701"), SubResource("Resource_sjsxa")])
+
+[node name="SecondaryWindow" type="Window" parent="." unique_id=188784817]
+oversampling_override = 1.0
+title = "RhinoEyes Projection Output"
+size = Vector2i(1920, 1080)
+
+[node name="Camera3D" type="Camera3D" parent="SecondaryWindow" unique_id=1703046969]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.1)
+cull_mask = 1048574
+environment = ExtResource("5_7gd3w")
+projection = 1
+current = true
+size = 3.0
