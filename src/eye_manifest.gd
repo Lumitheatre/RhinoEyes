@@ -132,7 +132,7 @@ func find_clip(actor_name: String, angle: int, aggravation: int) -> Dictionary:
 
     for clip in clips:
         # Skip disabled clips
-        if not clip.get("enabled", true):
+        if not clip.get("enabled", true) == "true":
             continue
 
         # Aggravation must match exactly
