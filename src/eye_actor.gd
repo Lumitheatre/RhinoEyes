@@ -7,6 +7,11 @@ class_name EyeActor
         eye_shader = val
         _setup_material()
 
+@export_range(0.0, 1.0, 0.01) var opacity_multiplier: float = 1.0:
+    set(val):
+        opacity_multiplier = val
+        _set_material_uniform("opacity_multiplier", opacity_multiplier)
+
 # --- Proxy Properties for Shader Uniforms ---
 @export_group("Film Aesthetics")
 
@@ -24,11 +29,6 @@ class_name EyeActor
     set(val):
         emission_strength = val
         _set_material_uniform("emission_strength", emission_strength)
-
-@export_range(0.0, 1.0, 0.01) var opacity_multiplier: float = 1.0:
-    set(val):
-        opacity_multiplier = val
-        _set_material_uniform("opacity_multiplier", opacity_multiplier)
 
 @export_group("Film Flicker")
 

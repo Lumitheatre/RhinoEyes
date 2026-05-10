@@ -147,18 +147,7 @@ func capture_current_state_as_cue() -> void:
         push_warning("CueManager: capture_current_state_as_cue only works in the editor.")
         return
 
-    var nodes: Array[Node] = get_nodes()
-
-    var entries: Array[CueEntry] = []
-    for node in nodes:
-        if not node.has_method("get_entity_id") or not node.has_method("capture_state"):
-            continue
-        var entry := CueEntry.new()
-        var id_array: Array[String] = []
-        id_array.append(node.get_entity_id())
-        entry.entity_ids = id_array
-        entry.state = node.capture_state()
-        entries.append(entry)
+    var entries := capture_entity_states()
 
     if entries.is_empty():
         push_warning("CueManager: No CueEntity nodes selected. Select one or more EyeActor nodes first.")
@@ -174,3 +163,19 @@ func capture_current_state_as_cue() -> void:
     print("CueManager: Added '%s' with %d entr%s." % [
         cue.name, entries.size(), "ies" if entries.size() != 1 else "y"
     ])
+
+## Capture the current state of all entities in the given nodes array
+## Returns an array of CueEntry with captured states
+func capture_entity_states() -> Array[CueEntry]:
+    var nodes: Array[Node] = get_nodes()
+    var entries: Array[CueEntry] = []
+    for node in nodes:
+        if not node.has_method("get_entity_id") or not node.has_method("capture_state"):
+            continue
+        var entry := CueEntry.new()
+        var id_array: Array[String] = []
+        id_array.append(node.get_entity_id())
+        entry.entity_ids = id_array
+        entry.state = node.capture_state()
+        entries.append(entry)
+    return entries
