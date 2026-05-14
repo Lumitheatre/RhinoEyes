@@ -52,6 +52,19 @@ class_name EyeActor
         flicker_seed = val
         _set_material_uniform("flicker_seed", flicker_seed)
 
+@export_group("Perspective Transition")
+
+## Duration of the perspective shift blend effect (in seconds)
+@export_range(0.0, 1.0, 0.01) var blend_duration: float = 0.15:
+    set(val):
+        blend_duration = val
+
+## Amount of motion smear during transitions
+@export_range(0.0, 0.1, 0.001) var smear_amount: float = 0.02:
+    set(val):
+        smear_amount = val
+        _set_material_uniform("smear_amount", smear_amount)
+
 @export_group("Cue System")
 
 ## Stable ID used by the cue system to address this actor.
@@ -78,6 +91,12 @@ class_name EyeActor
 
 # References
 var current_video_stream_player: VideoStreamPlayer
+
+# Perspective transition state
+var current_uv_offset: Vector2 = Vector2.ZERO
+var old_uv_offset: Vector2 = Vector2.ZERO
+var transition_time: float = 0.0
+var is_transitioning: bool = false
 
 # Set to true by transition_to() to suppress auto-tracking during cue-driven angles.
 var track_target: bool = true
@@ -187,8 +206,29 @@ func _apply_texture_and_uvs(texture_data: Dictionary):
         material_override.set_shader_parameter("video_texture", texture)
         # print("Texture size: ", texture.get_width(), "x", texture.get_height())
 
+    # Detect if UV offset has changed (perspective shift)
+    if uv_offset != current_uv_offset:
+        # Start transition
+        old_uv_offset = current_uv_offset
+        current_uv_offset = uv_offset
+
+        # Only trigger transition if we had a previous offset (skip initial setup)
+        if old_uv_offset != Vector2.ZERO or is_transitioning:
+            transition_time = blend_duration
+            is_transitioning = true
+
+            # Set up shader parameters for transition
+            material_override.set_shader_parameter("uv_offset_old", old_uv_offset)
+            material_override.set_shader_parameter("uv_offset_new", current_uv_offset)
+            material_override.set_shader_parameter("blend", 0.0)  # Start at old frame
+        else:
+            # First time setup - no transition
+            material_override.set_shader_parameter("uv_offset_new", current_uv_offset)
+            material_override.set_shader_parameter("uv_offset_old", current_uv_offset)
+            material_override.set_shader_parameter("blend", 1.0)
+
     # Pass UV bounds and aspect ratio to the shader
-    material_override.set_shader_parameter("uv_offset", uv_offset)
+    material_override.set_shader_parameter("uv_offset", uv_offset)  # Keep for backward compatibility
     material_override.set_shader_parameter("uv_scale", uv_scale)
     material_override.set_shader_parameter("tile_aspect_ratio", aspect_ratio)
 
@@ -204,6 +244,9 @@ func _sync_all_proxy_properties():
     _set_material_uniform("flicker_frequency", flicker_frequency)
     _set_material_uniform("flicker_amplitude", flicker_amplitude)
     _set_material_uniform("flicker_seed", flicker_seed)
+    _set_material_uniform("smear_amount", smear_amount)
+    # Initialize blend to 0 (fully new frame)
+    _set_material_uniform("blend", 0.0)
 
 ## Robust helper function for setting shader uniforms
 func _set_material_uniform(uniform_name: String, value):
@@ -217,6 +260,20 @@ func _process(_delta):
         var tex = current_video_stream_player.get_video_texture()
         if tex:
             material_override.set_shader_parameter("video_texture", tex)
+
+    # Handle perspective transition blending
+    if is_transitioning:
+        transition_time -= _delta
+        if transition_time <= 0.0:
+            transition_time = 0.0
+            is_transitioning = false
+            # Transition complete - snap to new frame
+            _set_material_uniform("blend", 1.0)
+        else:
+            # Calculate blend factor (0 = old, 1 = new)
+            var blend_factor = 1.0 - (transition_time / blend_duration)
+            blend_factor = clamp(blend_factor, 0.0, 1.0)
+            _set_material_uniform("blend", blend_factor)
 
     # Update view angle to track the target
     _update_view_angle_to_target()

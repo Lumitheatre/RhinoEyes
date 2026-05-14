@@ -6,6 +6,12 @@ uniform vec2 uv_offset = vec2(0.0, 0.0);
 uniform vec2 uv_scale = vec2(0.125, 0.125); // Default to 1/8th for 8x8 grid
 uniform float tile_aspect_ratio = 1.0;
 
+// Perspective shift transition uniforms
+uniform vec2 uv_offset_new = vec2(0.0, 0.0);
+uniform vec2 uv_offset_old = vec2(0.0, 0.0);
+uniform float blend : hint_range(0.0, 1.0) = 0.0;
+uniform float smear_amount : hint_range(0.0, 0.1) = 0.02; // Small UV smear for motion blur
+
 // Film Aesthetic Controls
 uniform float exposure : hint_range(0.0, 5.0) = 1.2;
 uniform float contrast : hint_range(0.0, 5.0) = 3;
@@ -30,8 +36,16 @@ void fragment() {
         fit_uv.y = (fit_uv.y - 0.5) * tile_aspect_ratio + 0.5;
     }
 
-    // 2. Sprite Sheet Mapping
-    vec2 sprite_uv = fit_uv * uv_scale + uv_offset;
+    // 2. Dual Sprite Sheet Mapping for Smooth Transitions
+    vec2 sprite_uv_new = fit_uv * uv_scale + uv_offset_new;
+
+    // Create a slight "motion smear" by offsetting the old UV slightly
+    // in the direction of the movement
+    vec2 movement_dir = normalize(uv_offset_new - uv_offset_old + vec2(0.0001));
+    vec2 sprite_uv_old = fit_uv * uv_scale + uv_offset_old - (movement_dir * smear_amount * blend);
+
+    // Fallback to new offset when blend is 0 (for backward compatibility)
+    vec2 sprite_uv = sprite_uv_new;
 
     // 3. Sampling and Bounds Check
     // We strictly clip to the uv_offset/scale range to prevent texture bleeding
@@ -39,7 +53,12 @@ void fragment() {
         EMISSION = vec3(0.0);
         ALPHA = 0.0;
     } else {
-        vec4 tex = texture(video_texture, sprite_uv);
+        // Sample both old and new states
+        vec4 tex_new = texture(video_texture, sprite_uv_new);
+        vec4 tex_old = texture(video_texture, sprite_uv_old);
+
+        // Blend the raw texture data
+        vec4 tex = mix(tex_old, tex_new, blend);
 
         // 4. Monochromatic Aged Film Logic
         // Convert to luma using standard rec.601 weights
