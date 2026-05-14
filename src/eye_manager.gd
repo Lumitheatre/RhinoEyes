@@ -27,6 +27,12 @@ func _exit_tree():
 ## Path to the CalibrationData .tres resource to load on startup and save to.
 @export_file("*.tres") var calibration_data_path: String = "res://src/calibration_data.tres"
 
+## UI Camera to include in calibration (optional)
+@export var ui_camera: Camera3D
+
+## Projection Camera to include in calibration (optional)
+@export var projection_camera: Camera3D
+
 ## Save calibration state from the current EyeActor transforms into calibration_data_path.
 @export_tool_button("Save Calibration State", "Save")
 var _save_calibration_btn: Callable = save_calibration_state
@@ -85,12 +91,12 @@ func _collect_eye_actors(node: Node, out: Array[EyeActor]) -> void:
         _collect_eye_actors(child, out)
 
 func _get_calibration_cameras() -> Dictionary:
-    """Returns a dictionary of camera NodePaths to Camera3D nodes."""
+    """Returns a dictionary of camera identifiers to Camera3D nodes."""
     var cameras: Dictionary = {}
-    if has_node("%UICamera"):
-        cameras["%UICamera"] = get_node("%UICamera")
-    if has_node("%ProjectionCamera"):
-        cameras["%ProjectionCamera"] = get_node("%ProjectionCamera")
+    if ui_camera:
+        cameras["ui_camera"] = ui_camera
+    if projection_camera:
+        cameras["projection_camera"] = projection_camera
     return cameras
 
 func _capture_camera_state(camera: Camera3D) -> CameraCalibrationState:

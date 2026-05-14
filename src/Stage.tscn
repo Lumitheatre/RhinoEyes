@@ -1042,7 +1042,6 @@ script = ExtResource("1_opo57")
 environment = ExtResource("5_7gd3w")
 
 [node name="UICamera" type="Camera3D" parent="." unique_id=476807594]
-unique_name_in_owner = true
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.34416765, 0.1)
 environment = ExtResource("5_7gd3w")
 projection = 1
@@ -1074,22 +1073,24 @@ offset_bottom = 1080.0
 texture = ExtResource("4_hdod2")
 expand_mode = 2
 
-[node name="CameraVisualizer" type="Control" parent="UI" unique_id=142823949 node_paths=PackedStringArray("schematic_camera", "clean_camera")]
+[node name="CameraVisualizer" type="Control" parent="UI" unique_id=142823949 node_paths=PackedStringArray("ui_camera", "projection_camera")]
 layout_mode = 3
 anchors_preset = 0
 offset_right = 40.0
 offset_bottom = 40.0
 script = ExtResource("5_8n1kj")
-schematic_camera = NodePath("../../UICamera")
-clean_camera = NodePath("../../SecondaryWindow/ProjectionCamera")
+ui_camera = NodePath("../../UICamera")
+projection_camera = NodePath("../../SecondaryWindow/ProjectionCamera")
 line_color = Color(0.56078434, 0.12941177, 0.30980393, 1)
 line_width = 1.0
 metadata/_custom_type_script = "uid://3sdpjx2jxtxx"
 
-[node name="EyeManager" type="Node" parent="." unique_id=2021950246 node_paths=PackedStringArray("target_node")]
+[node name="EyeManager" type="Node" parent="." unique_id=2021950246 node_paths=PackedStringArray("target_node", "ui_camera", "projection_camera")]
 script = ExtResource("1_nxjac")
 manifest = ExtResource("2_ub6vd")
 target_node = NodePath("Target")
+ui_camera = NodePath("../UICamera")
+projection_camera = NodePath("../SecondaryWindow/ProjectionCamera")
 metadata/_custom_type_script = "uid://cteeeb0bmtmg5"
 
 [node name="Dasha" type="MeshInstance3D" parent="EyeManager" unique_id=2021718081]
@@ -1325,7 +1326,6 @@ position = Vector2i(0, 36)
 size = Vector2i(1920, 1080)
 
 [node name="ProjectionCamera" type="Camera3D" parent="SecondaryWindow" unique_id=1703046969]
-unique_name_in_owner = true
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.112636566, 0.1)
 cull_mask = 1048574
 environment = ExtResource("5_7gd3w")
