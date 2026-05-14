@@ -1,0 +1,173 @@
+[gd_resource type="Resource" script_class="CalibrationData" format=3]
+
+[ext_resource type="Script" path="res://src/cue_entry.gd" id="1_pumtd"]
+[ext_resource type="Script" path="res://src/eye_actor_calibration_state.gd" id="2_ajhja"]
+[ext_resource type="Script" path="res://src/camera_calibration_state.gd" id="3_ajhja"]
+[ext_resource type="Script" path="res://src/calibration_data.gd" id="3_x2ea2"]
+
+[sub_resource type="Resource" id="Resource_x2ea2"]
+script = ExtResource("2_ajhja")
+position = Vector3(-2.1147628, 1.1567221, 0)
+rotation_degrees = Vector3(90, 0, 0)
+scale = Vector3(0.49, 0.49, 0.49)
+
+[sub_resource type="Resource" id="Resource_qyxgj"]
+script = ExtResource("1_pumtd")
+entity_ids = Array[String](["EyeActor1"])
+state = SubResource("Resource_x2ea2")
+
+[sub_resource type="Resource" id="Resource_jni1g"]
+script = ExtResource("2_ajhja")
+position = Vector3(-0.0014024973, 1.1807091, 0)
+rotation_degrees = Vector3(90, 0, 0)
+scale = Vector3(0.49, 0.49, 0.49)
+
+[sub_resource type="Resource" id="Resource_hs62j"]
+script = ExtResource("1_pumtd")
+entity_ids = Array[String](["EyeActor7"])
+state = SubResource("Resource_jni1g")
+
+[sub_resource type="Resource" id="Resource_58h81"]
+script = ExtResource("2_ajhja")
+position = Vector3(0.16632283, 0.6742904, 0)
+rotation_degrees = Vector3(90, 0, 0)
+scale = Vector3(0.49, 0.49, 0.49)
+
+[sub_resource type="Resource" id="Resource_m14jr"]
+script = ExtResource("1_pumtd")
+entity_ids = Array[String](["EyeActor9"])
+state = SubResource("Resource_58h81")
+
+[sub_resource type="Resource" id="Resource_wgitw"]
+script = ExtResource("2_ajhja")
+position = Vector3(-0.06392415, 0.14376783, 0)
+rotation_degrees = Vector3(90, 0, 0)
+scale = Vector3(0.49, 0.49, 0.49)
+
+[sub_resource type="Resource" id="Resource_tnmc5"]
+script = ExtResource("1_pumtd")
+entity_ids = Array[String](["EyeActor8"])
+state = SubResource("Resource_wgitw")
+
+[sub_resource type="Resource" id="Resource_nd002"]
+script = ExtResource("2_ajhja")
+position = Vector3(1.8605518, 1.03899, 0)
+rotation_degrees = Vector3(90, 0, 0)
+scale = Vector3(0.49, 0.49, 0.49)
+
+[sub_resource type="Resource" id="Resource_rfilk"]
+script = ExtResource("1_pumtd")
+entity_ids = Array[String](["EyeActor2"])
+state = SubResource("Resource_nd002")
+
+[sub_resource type="Resource" id="Resource_bbhr1"]
+script = ExtResource("2_ajhja")
+position = Vector3(-1.7680497, 0.7465435, 0)
+rotation_degrees = Vector3(82.30699, 90.00001, 90.00001)
+scale = Vector3(0.49, 0.49, 0.49)
+
+[sub_resource type="Resource" id="Resource_ycyhf"]
+script = ExtResource("1_pumtd")
+entity_ids = Array[String](["EyeActor3"])
+state = SubResource("Resource_bbhr1")
+
+[sub_resource type="Resource" id="Resource_j7d58"]
+script = ExtResource("2_ajhja")
+position = Vector3(1.9257789, 0.36373454, 0)
+rotation_degrees = Vector3(90, 0, 0)
+scale = Vector3(0.49, 0.49, 0.49)
+
+[sub_resource type="Resource" id="Resource_8qggh"]
+script = ExtResource("1_pumtd")
+entity_ids = Array[String](["EyeActor4"])
+state = SubResource("Resource_j7d58")
+
+[sub_resource type="Resource" id="Resource_c6urc"]
+script = ExtResource("2_ajhja")
+position = Vector3(1.8526006, -0.2642854, 0)
+rotation_degrees = Vector3(90, 0, 0)
+scale = Vector3(0.49, 0.49, 0.49)
+
+[sub_resource type="Resource" id="Resource_umqsk"]
+script = ExtResource("1_pumtd")
+entity_ids = Array[String](["EyeActor5"])
+state = SubResource("Resource_c6urc")
+
+[sub_resource type="Resource" id="Resource_gf0qi"]
+script = ExtResource("2_ajhja")
+position = Vector3(2.03088, -0.6829704, 0)
+rotation_degrees = Vector3(90, 0, 0)
+scale = Vector3(0.49, 0.49, 0.49)
+
+[sub_resource type="Resource" id="Resource_la6ww"]
+script = ExtResource("1_pumtd")
+entity_ids = Array[String](["EyeActor6"])
+state = SubResource("Resource_gf0qi")
+
+[sub_resource type="Resource" id="Resource_xolkb"]
+script = ExtResource("2_ajhja")
+position = Vector3(0.030878454, -0.43852603, 0)
+rotation_degrees = Vector3(90, 0, 0)
+scale = Vector3(0.49, 0.49, 0.49)
+
+[sub_resource type="Resource" id="Resource_r3qu0"]
+script = ExtResource("1_pumtd")
+entity_ids = Array[String](["EyeActor10"])
+state = SubResource("Resource_xolkb")
+
+[sub_resource type="Resource" id="Resource_tcdvb"]
+script = ExtResource("2_ajhja")
+position = Vector3(-1.7954909, 0.21890521, 0)
+rotation_degrees = Vector3(82.40998, -90.00001, -90.00001)
+scale = Vector3(0.49000004, 0.49, 0.49000004)
+
+[sub_resource type="Resource" id="Resource_ftno1"]
+script = ExtResource("1_pumtd")
+entity_ids = Array[String](["EyeActor11"])
+state = SubResource("Resource_tcdvb")
+
+[sub_resource type="Resource" id="Resource_fv0jm"]
+script = ExtResource("2_ajhja")
+position = Vector3(-2.022457, -0.2918588, 0)
+rotation_degrees = Vector3(90, 0, 0)
+scale = Vector3(0.49, 0.49, 0.49)
+
+[sub_resource type="Resource" id="Resource_gs5do"]
+script = ExtResource("1_pumtd")
+entity_ids = Array[String](["EyeActor12"])
+state = SubResource("Resource_fv0jm")
+
+[sub_resource type="Resource" id="Resource_0v6s0"]
+script = ExtResource("2_ajhja")
+position = Vector3(-1.8697802, -0.80444634, 0)
+rotation_degrees = Vector3(90, 0, 0)
+scale = Vector3(0.49, 0.49, 0.49)
+
+[sub_resource type="Resource" id="Resource_kogav"]
+script = ExtResource("1_pumtd")
+entity_ids = Array[String](["EyeActor13"])
+state = SubResource("Resource_0v6s0")
+
+[sub_resource type="Resource" id="Resource_28dts"]
+script = ExtResource("3_ajhja")
+position = Vector3(0, -0.41300005, 0.1)
+size = 5.0
+
+[sub_resource type="Resource" id="Resource_35wxv"]
+script = ExtResource("1_pumtd")
+entity_ids = Array[String](["%UICamera"])
+state = SubResource("Resource_28dts")
+
+[sub_resource type="Resource" id="Resource_1y3yu"]
+script = ExtResource("3_ajhja")
+position = Vector3(0, 0.112636566, 0.1)
+size = 2.78257
+
+[sub_resource type="Resource" id="Resource_lanuh"]
+script = ExtResource("1_pumtd")
+entity_ids = Array[String](["%ProjectionCamera"])
+state = SubResource("Resource_1y3yu")
+
+[resource]
+script = ExtResource("3_x2ea2")
+entries = Array[ExtResource("1_pumtd")]([SubResource("Resource_qyxgj"), SubResource("Resource_hs62j"), SubResource("Resource_m14jr"), SubResource("Resource_tnmc5"), SubResource("Resource_rfilk"), SubResource("Resource_ycyhf"), SubResource("Resource_8qggh"), SubResource("Resource_umqsk"), SubResource("Resource_la6ww"), SubResource("Resource_r3qu0"), SubResource("Resource_ftno1"), SubResource("Resource_gs5do"), SubResource("Resource_kogav"), SubResource("Resource_35wxv"), SubResource("Resource_lanuh")])

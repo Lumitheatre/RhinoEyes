@@ -8,7 +8,7 @@
 ##   func get_entity_id() -> String
 ##       Returns a stable, unique string that identifies this entity in cue entries.
 ##
-##   func capture_state() -> EntityState
+##   func capture_cue_state() -> EntityState
 ##       Returns an EntityState snapshot of the entity's current cue-relevant parameters.
 ##       Used by the editor helper to record live state into a new Cue.
 ##

@@ -210,18 +210,18 @@ func capture_current_state_as_cue() -> void:
         cue.name, entries.size(), "ies" if entries.size() != 1 else "y"
     ])
 
-## Capture the current state of all entities in the given nodes array
+## Capture the current cue state of all CueEntities in the edited scene.
 ## Returns an array of CueEntry with captured states
 func capture_entity_states() -> Array[CueEntry]:
     var nodes: Array[Node] = get_nodes()
     var entries: Array[CueEntry] = []
     for node in nodes:
-        if not node.has_method("get_entity_id") or not node.has_method("capture_state"):
+        if not node.has_method("get_entity_id") or not node.has_method("capture_cue_state"):
             continue
         var entry := CueEntry.new()
         var id_array: Array[String] = []
         id_array.append(node.get_entity_id())
         entry.entity_ids = id_array
-        entry.state = node.capture_state()
+        entry.state = node.capture_cue_state()
         entries.append(entry)
     return entries

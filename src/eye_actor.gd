@@ -83,6 +83,7 @@ var current_video_stream_player: VideoStreamPlayer
 var track_target: bool = true
 
 var _cue_tween: Tween
+var _calibration_tween: Tween
 
 func _ready():
     # Set up default plane mesh if none exists
@@ -295,12 +296,20 @@ func get_entity_id() -> String:
         push_error("EyeActor '%s': entity_id is empty" % name)
     return entity_id
 
-## Captures the current cue-relevant state of this actor as an EyeActorState.
-func capture_state() -> EyeActorState:
-    var state := EyeActorState.new()
+## Captures the current cue-relevant state of this actor as an EyeActorCueState.
+func capture_cue_state() -> EyeActorCueState:
+    var state := EyeActorCueState.new()
     state.aggravation = aggravation
     state.opacity_multiplier = opacity_multiplier
     state.track_target = track_target
+    return state
+
+## Captures the current calibration (global) state of this actor as an EyeActorCalibrationState.
+func capture_calibration_state() -> EyeActorCalibrationState:
+    var state := EyeActorCalibrationState.new()
+    state.position = position
+    state.rotation_degrees = rotation_degrees
+    state.scale = scale
     return state
 
 ## Applies an EntityState over [duration] seconds.
@@ -308,20 +317,42 @@ func capture_state() -> EyeActorState:
 ## - aggravation is snapped immediately.
 ## - track_target is applied immediately, suppressing auto-tracking.
 func transition_to(state: EntityState, duration: float) -> void:
-    if not state is EyeActorState:
-        push_error("EyeActor '%s': transition_to received unexpected state type." % name)
+    # Cue state transition
+    if state is EyeActorCueState:
+        var eye_state := state as EyeActorCueState
+
+        aggravation = eye_state.aggravation
+        track_target = eye_state.track_target
+
+        if _cue_tween:
+            _cue_tween.kill()
+
+        if duration <= 0.0:
+            opacity_multiplier = eye_state.opacity_multiplier
+            return
+
+        _cue_tween = create_tween().set_parallel(true)
+        _cue_tween.tween_property(self, "opacity_multiplier", eye_state.opacity_multiplier, duration)
         return
-    var eye_state := state as EyeActorState
 
-    aggravation = eye_state.aggravation
-    track_target = eye_state.track_target
+    # Calibration state transition
+    if state is EyeActorCalibrationState:
+        var cal_state := state as EyeActorCalibrationState
 
-    if _cue_tween:
-        _cue_tween.kill()
+        if _calibration_tween:
+            _calibration_tween.kill()
 
-    if duration <= 0.0:
-        opacity_multiplier = eye_state.opacity_multiplier
+        if duration <= 0.0:
+            position = cal_state.position
+            rotation_degrees = cal_state.rotation_degrees
+            scale = cal_state.scale
+            return
+
+        _calibration_tween = create_tween().set_parallel(true)
+        _calibration_tween.tween_property(self, "position", cal_state.position, duration)
+        _calibration_tween.tween_property(self, "rotation_degrees", cal_state.rotation_degrees, duration)
+        _calibration_tween.tween_property(self, "scale", cal_state.scale, duration)
         return
 
-    _cue_tween = create_tween().set_parallel(true)
-    _cue_tween.tween_property(self, "opacity_multiplier", eye_state.opacity_multiplier, duration)
+    push_error("EyeActor '%s': transition_to received unexpected state type '%s'." % [name, state.get_class() if state else "<null>"])
+    return

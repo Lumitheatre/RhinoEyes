@@ -22,6 +22,19 @@ func _exit_tree():
 ## This is the target the transform of which the eyes follow
 @export var target_node: EyeTarget
 
+@export_group("Calibration")
+
+## Path to the CalibrationData .tres resource to load on startup and save to.
+@export_file("*.tres") var calibration_data_path: String = "res://src/calibration_data.tres"
+
+## Save calibration state from the current EyeActor transforms into calibration_data_path.
+@export_tool_button("Save Calibration State", "Save")
+var _save_calibration_btn: Callable = save_calibration_state
+
+## Load calibration state from the current EyeActor transforms into calibration_data_path.
+@export_tool_button("Load Calibration State to Editor", "ConfirmImport")
+var _load_calibration_btn: Callable = _load_and_apply_calibration
+
 func _get_configuration_warnings() -> PackedStringArray:
     var warnings = PackedStringArray()
     if not manifest:
@@ -42,10 +55,152 @@ func _ready():
     add_child(_video_container)
     _video_container.hide()
 
+    if not Engine.is_editor_hint():
+        # Load and apply calibration at runtime startup.
+        call_deferred("_load_and_apply_calibration")
+
+func _input(event: InputEvent) -> void:
+    if Engine.is_editor_hint():
+        return
+    if event.is_action_pressed("save_calibration_state"):
+        save_calibration_state()
+        get_tree().root.set_input_as_handled()
+
 func get_target_position() -> Vector3:
     if target_node:
         return target_node.global_position
     return Vector3.ZERO
+
+# --- Calibration ---
+
+func _get_eye_actors() -> Array[EyeActor]:
+    var result: Array[EyeActor] = []
+    _collect_eye_actors(self, result)
+    return result
+
+func _collect_eye_actors(node: Node, out: Array[EyeActor]) -> void:
+    for child in node.get_children():
+        if child is EyeActor:
+            out.append(child)
+        _collect_eye_actors(child, out)
+
+func _get_calibration_cameras() -> Dictionary:
+    """Returns a dictionary of camera NodePaths to Camera3D nodes."""
+    var cameras: Dictionary = {}
+    if has_node("%UICamera"):
+        cameras["%UICamera"] = get_node("%UICamera")
+    if has_node("%ProjectionCamera"):
+        cameras["%ProjectionCamera"] = get_node("%ProjectionCamera")
+    return cameras
+
+func _capture_camera_state(camera: Camera3D) -> CameraCalibrationState:
+    """Captures the current calibration state of a camera."""
+    var state := CameraCalibrationState.new()
+    state.position = camera.position
+    state.rotation_degrees = camera.rotation_degrees
+    state.size = camera.size
+    return state
+
+func _apply_camera_state(camera: Camera3D, state: CameraCalibrationState) -> void:
+    """Applies a calibration state to a camera."""
+    camera.position = state.position
+    camera.rotation_degrees = state.rotation_degrees
+    camera.size = state.size
+
+func save_calibration_state() -> void:
+    if calibration_data_path.strip_edges() == "":
+        push_warning("EyeManager: calibration_data_path is empty; cannot save calibration.")
+        return
+
+    var actors := _get_eye_actors()
+    var cameras := _get_calibration_cameras()
+
+    if actors.is_empty() and cameras.is_empty():
+        push_warning("EyeManager: No EyeActor children or cameras found; nothing to save.")
+        return
+
+    var data := CalibrationData.new()
+    var entries: Array[CueEntry] = []
+
+    # Save EyeActor calibration states
+    for actor: EyeActor in actors:
+        var entry := CueEntry.new()
+        var ids: Array[String] = []
+        ids.append(actor.get_entity_id())
+        entry.entity_ids = ids
+        entry.state = actor.capture_calibration_state()
+        entries.append(entry)
+
+    # Save Camera calibration states
+    for camera_path in cameras.keys():
+        var camera: Camera3D = cameras[camera_path]
+        if camera:
+            var entry := CueEntry.new()
+            var ids: Array[String] = []
+            ids.append(camera_path)
+            entry.entity_ids = ids
+            entry.state = _capture_camera_state(camera)
+            entries.append(entry)
+
+    data.entries = entries
+
+    var err := ResourceSaver.save(data, calibration_data_path)
+    if err != OK:
+        push_error("EyeManager: Failed to save CalibrationData to '%s' (err=%s)." % [calibration_data_path, err])
+        return
+
+    print("EyeManager: Saved calibration for %d EyeActors and %d cameras to %s" % [actors.size(), cameras.size(), calibration_data_path])
+
+func _load_and_apply_calibration() -> void:
+    var path := calibration_data_path.strip_edges()
+    if path == "":
+        return
+
+    if not ResourceLoader.exists(path):
+        push_warning("EyeManager: CalibrationData not found at '%s' (skipping)." % path)
+        return
+
+    var res = load(path)
+    if not res or not (res is CalibrationData):
+        push_warning("EyeManager: Resource at '%s' is not CalibrationData (skipping)." % path)
+        return
+
+    apply_calibration_data(res as CalibrationData)
+
+func apply_calibration_data(data: CalibrationData) -> void:
+    var actors := _get_eye_actors()
+    var cameras := _get_calibration_cameras()
+
+    if actors.is_empty() and cameras.is_empty():
+        return
+
+    var actor_by_id: Dictionary = {}
+    for actor: EyeActor in actors:
+        actor_by_id[actor.get_entity_id()] = actor
+
+    var applied_count := 0
+
+    for entry: CueEntry in data.entries:
+        if not entry or not entry.state:
+            continue
+
+        # Handle EyeActor calibration states
+        if entry.state is EyeActorCalibrationState:
+            for entity_id: String in entry.entity_ids:
+                if actor_by_id.has(entity_id):
+                    var actor: EyeActor = actor_by_id[entity_id]
+                    actor.transition_to(entry.state, 0.0)
+                    applied_count += 1
+
+        # Handle Camera calibration states
+        elif entry.state is CameraCalibrationState:
+            for entity_id: String in entry.entity_ids:
+                if cameras.has(entity_id):
+                    var camera: Camera3D = cameras[entity_id]
+                    _apply_camera_state(camera, entry.state as CameraCalibrationState)
+                    applied_count += 1
+
+    print("EyeManager: Applied calibration data (%d entries applied)." % applied_count)
 
 ## Get list of available actor names from the manifest
 func get_actor_names() -> PackedStringArray:
