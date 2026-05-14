@@ -59,7 +59,7 @@ shader_parameter/flicker_seed = 43758.5453
 render_priority = 0
 shader = ExtResource("3_cel86")
 shader_parameter/video_texture = SubResource("Texture2DRD_8n1kj")
-shader_parameter/uv_offset = Vector2(0.625, 0.75)
+shader_parameter/uv_offset = Vector2(0.5, 0.75)
 shader_parameter/uv_scale = Vector2(0.0625, 0.0625)
 shader_parameter/tile_aspect_ratio = 1.7777777777777777
 shader_parameter/exposure = 1.17
@@ -78,7 +78,7 @@ shader_parameter/flicker_seed = 43758.5453
 render_priority = 0
 shader = ExtResource("3_cel86")
 shader_parameter/video_texture = SubResource("Texture2DRD_8ruf2")
-shader_parameter/uv_offset = Vector2(0.0625, 0)
+shader_parameter/uv_offset = Vector2(0, 0)
 shader_parameter/uv_scale = Vector2(0.0625, 0.0625)
 shader_parameter/tile_aspect_ratio = 1.7777777777777777
 shader_parameter/exposure = 1.17
@@ -180,7 +180,7 @@ shader_parameter/flicker_seed = 43758.5453
 render_priority = 0
 shader = ExtResource("3_cel86")
 shader_parameter/video_texture = SubResource("Texture2DRD_8ruf2")
-shader_parameter/uv_offset = Vector2(0.0625, 0.5)
+shader_parameter/uv_offset = Vector2(0, 0.5)
 shader_parameter/uv_scale = Vector2(0.0625, 0.0625)
 shader_parameter/tile_aspect_ratio = 1.7777777777777777
 shader_parameter/exposure = 1.17
@@ -214,7 +214,7 @@ shader_parameter/flicker_seed = 43758.5453
 render_priority = 0
 shader = ExtResource("3_cel86")
 shader_parameter/video_texture = SubResource("Texture2DRD_8ruf2")
-shader_parameter/uv_offset = Vector2(0.5, 0.375)
+shader_parameter/uv_offset = Vector2(0.1875, 0.4375)
 shader_parameter/uv_scale = Vector2(0.0625, 0.0625)
 shader_parameter/tile_aspect_ratio = 1.7777777777777777
 shader_parameter/exposure = 1.17
@@ -1118,7 +1118,7 @@ contrast = 1.78
 emission_strength = 1.15
 entity_id = "EyeActor1"
 character_name = "Dasha"
-view_angle = 299.0
+view_angle = 302.0
 metadata/_custom_type_script = "uid://brvjdnnvv2hyx"
 
 [node name="Katya" type="MeshInstance3D" parent="EyeManager" unique_id=824714467]
@@ -1132,7 +1132,7 @@ contrast = 1.78
 emission_strength = 1.15
 entity_id = "EyeActor7"
 character_name = "Katya"
-view_angle = 262.0
+view_angle = 270.0
 metadata/_custom_type_script = "uid://brvjdnnvv2hyx"
 
 [node name="Artyom" type="MeshInstance3D" parent="EyeManager" unique_id=800783043]
@@ -1146,7 +1146,7 @@ contrast = 1.78
 emission_strength = 1.15
 entity_id = "EyeActor9"
 character_name = "Artyom"
-view_angle = 257.0
+view_angle = 267.0
 metadata/_custom_type_script = "uid://brvjdnnvv2hyx"
 
 [node name="Kostya" type="MeshInstance3D" parent="EyeManager" unique_id=1677630707]
@@ -1160,7 +1160,7 @@ contrast = 1.78
 emission_strength = 1.15
 entity_id = "EyeActor8"
 character_name = "Kostya"
-view_angle = 260.0
+view_angle = 272.0
 metadata/_custom_type_script = "uid://brvjdnnvv2hyx"
 
 [node name="Dina" type="MeshInstance3D" parent="EyeManager" unique_id=64907441]
@@ -1174,7 +1174,7 @@ contrast = 1.78
 emission_strength = 1.0
 entity_id = "EyeActor2"
 character_name = "Dina"
-view_angle = 232.0
+view_angle = 241.0
 metadata/_custom_type_script = "uid://brvjdnnvv2hyx"
 
 [node name="Alisa" type="MeshInstance3D" parent="EyeManager" unique_id=921557969]
@@ -1188,7 +1188,7 @@ contrast = 1.78
 emission_strength = 1.15
 entity_id = "EyeActor3"
 character_name = "Alisa"
-view_angle = 297.0
+view_angle = 301.0
 metadata/_custom_type_script = "uid://brvjdnnvv2hyx"
 
 [node name="Sergey" type="MeshInstance3D" parent="EyeManager" unique_id=1194612402]
@@ -1202,7 +1202,7 @@ contrast = 1.78
 emission_strength = 1.15
 entity_id = "EyeActor4"
 character_name = "Sergey"
-view_angle = 224.0
+view_angle = 234.0
 aggravation = 3
 metadata/_custom_type_script = "uid://brvjdnnvv2hyx"
 
@@ -1217,7 +1217,7 @@ contrast = 1.78
 emission_strength = 1.0
 entity_id = "EyeActor5"
 character_name = "Dyadya Vova"
-view_angle = 215.0
+view_angle = 227.0
 metadata/_custom_type_script = "uid://brvjdnnvv2hyx"
 
 [node name="Vitaliy" type="MeshInstance3D" parent="EyeManager" unique_id=924590995]
@@ -1231,7 +1231,7 @@ contrast = 1.78
 emission_strength = 1.15
 entity_id = "EyeActor6"
 character_name = "Vitaliy"
-view_angle = 206.0
+view_angle = 218.0
 metadata/_custom_type_script = "uid://brvjdnnvv2hyx"
 
 [node name="Zhenya" type="MeshInstance3D" parent="EyeManager" unique_id=1531924818]
@@ -1245,7 +1245,7 @@ contrast = 1.78
 emission_strength = 1.15
 entity_id = "EyeActor10"
 character_name = "Zhenya"
-view_angle = 253.0
+view_angle = 269.0
 metadata/_custom_type_script = "uid://brvjdnnvv2hyx"
 
 [node name="Oksana" type="MeshInstance3D" parent="EyeManager" unique_id=292438152]
@@ -1259,7 +1259,7 @@ contrast = 1.78
 emission_strength = 1.15
 entity_id = "EyeActor11"
 character_name = "Oksana"
-view_angle = 303.0
+view_angle = 306.0
 metadata/_custom_type_script = "uid://brvjdnnvv2hyx"
 
 [node name="Sasha" type="MeshInstance3D" parent="EyeManager" unique_id=867975701]
@@ -1273,7 +1273,7 @@ contrast = 1.78
 emission_strength = 1.15
 entity_id = "EyeActor12"
 character_name = "Sasha"
-view_angle = 315.0
+view_angle = 316.0
 metadata/_custom_type_script = "uid://brvjdnnvv2hyx"
 
 [node name="Nadya" type="MeshInstance3D" parent="EyeManager" unique_id=884111087]
@@ -1287,14 +1287,16 @@ contrast = 1.78
 emission_strength = 1.15
 entity_id = "EyeActor13"
 character_name = "Nadya"
-view_angle = 323.0
+view_angle = 322.0
 metadata/_custom_type_script = "uid://brvjdnnvv2hyx"
 
 [node name="Target" type="Node3D" parent="EyeManager" unique_id=507729988]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.4222598, 0.8758286, 0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.5, 0)
 script = ExtResource("6_enulu")
-lerp_speed = 2.5
 action_move_sensitivity = 1.0
+acceleration = 2.5
+friction = 0.5
+brake_distance = 1.0
 y_limit = 2.0
 
 [node name="Misha" type="MeshInstance3D" parent="EyeManager/Target" unique_id=82147127]

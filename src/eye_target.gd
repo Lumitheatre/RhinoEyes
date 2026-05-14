@@ -4,12 +4,29 @@ class_name EyeTarget
 ## The target position in world space this node is seeking to reach
 var destination_pos: Vector3
 
-@export var lerp_speed: float = 5.0
+## Current velocity for physics-based movement
+var velocity: Vector3 = Vector3.ZERO
+
 @export var plane_offset: float = 0.0  # The height of the "stage" floor
 
 ## Movement sensitivity when using action inputs (joystick/analog)
 ## Multiplier for axis values (typically -1.0 to 1.0)
 @export var action_move_sensitivity: float = 5.0
+
+## Physics-based movement properties
+@export_group("Physics Movement")
+
+## How quickly the target accelerates toward the destination
+@export var acceleration: float = 20.0
+
+## Maximum movement speed
+@export var max_speed: float = 10.0
+
+## Friction/damping applied to velocity (0-1, higher = more friction)
+@export var friction: float = 0.85
+
+## Threshold distance to start slowing down near destination
+@export var brake_distance: float = 0.5
 
 ## Enable/disable boundary constraint
 @export var constrain_to_window: bool = true
@@ -27,9 +44,44 @@ func _input(event: InputEvent) -> void:
             _clamp_to_window_bounds()
 
 func _process(delta: float) -> void:
-    # Continuously move towards the destination position for smooth movement
+    # Physics-based movement toward destination
     var current_pos = global_transform.origin
-    global_transform.origin = current_pos.lerp(destination_pos, lerp_speed * delta)
+    var direction = destination_pos - current_pos
+    var distance = direction.length()
+
+    if distance > 0.001:
+        direction = direction.normalized()
+
+        # Calculate desired velocity based on distance
+        var desired_speed = max_speed
+
+        # Slow down when approaching destination
+        if distance < brake_distance:
+            desired_speed *= (distance / brake_distance)
+
+        # Calculate acceleration toward destination
+        var desired_velocity = direction * desired_speed
+        var acceleration_force = (desired_velocity - velocity) * acceleration * delta
+
+        # Apply acceleration
+        velocity += acceleration_force
+
+        # Clamp velocity to max speed
+        if velocity.length() > max_speed:
+            velocity = velocity.normalized() * max_speed
+    else:
+        # Apply friction when at destination
+        velocity *= friction
+
+        # Stop completely when velocity is very small
+        if velocity.length() < 0.001:
+            velocity = Vector3.ZERO
+
+    # Apply friction for smooth deceleration
+    velocity *= (1.0 - (1.0 - friction) * delta * 10.0)
+
+    # Update position based on velocity
+    global_transform.origin += velocity * delta
 
     # Handle action-based movement (right joystick analog)
     _handle_action_movement(delta)

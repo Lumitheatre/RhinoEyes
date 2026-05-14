@@ -63,7 +63,7 @@ state = SubResource("Resource_tnmc5")
 [sub_resource type="Resource" id="Resource_rfilk"]
 script = ExtResource("2_ajhja")
 position = Vector3(-1.7680497, 0.7465435, 0)
-rotation_degrees = Vector3(82.30698, 90.00001, 90.00001)
+rotation_degrees = Vector3(82.30697, 90.00001, 90.00001)
 scale = Vector3(0.49, 0.49, 0.49)
 
 [sub_resource type="Resource" id="Resource_bbhr1"]
