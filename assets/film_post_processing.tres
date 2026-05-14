@@ -1,0 +1,27 @@
+[gd_resource type="ShaderMaterial" format=3 uid="uid://o74wlnvbh48k"]
+
+[ext_resource type="Shader" uid="uid://bteu0foag1fom" path="res://shaders/film_post_process.gdshader" id="1_kgong"]
+
+[resource]
+shader = ExtResource("1_kgong")
+shader_parameter/desaturation = 0.0
+shader_parameter/sepia_amount = 0.0
+shader_parameter/sepia_color = Color(1, 0.95, 0.7, 1)
+shader_parameter/grain_amount = 0.02400000114
+shader_parameter/grain_scale = 7.541000354937619
+shader_parameter/grain_speed = 2.6270001247825
+shader_parameter/enable_scratches = true
+shader_parameter/scratch_amount = 0.046000002185
+shader_parameter/scratch_density = 0.0400000019
+shader_parameter/scratch_speed = 20.0
+shader_parameter/weave_amount = 0.0
+shader_parameter/weave_speed = 10.0
+shader_parameter/enable_bloom = true
+shader_parameter/bloom_strength = 0.5350000254125
+shader_parameter/bloom_threshold = 0.1690000080275
+shader_parameter/bloom_spread = 7.7650003688375
+shader_parameter/bloom_horizontal_strength = 0.41200001957
+shader_parameter/bloom_vertical_strength = 0.690000032775
+shader_parameter/bloom_tint = Color(1, 0.96, 0.88, 1)
+shader_parameter/vignette_amount = 0.158000007505
+shader_parameter/vignette_smoothness = 1.81200008281012
