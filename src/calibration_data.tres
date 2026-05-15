@@ -1,173 +1,140 @@
-[gd_resource type="Resource" script_class="CalibrationData" format=3]
+[gd_resource type="Resource" script_class="CalibrationData" format=3 uid="uid://dm4p3jusyadoq"]
 
-[ext_resource type="Script" path="res://src/cue_entry.gd" id="1_pumtd"]
-[ext_resource type="Script" path="res://src/eye_actor_calibration_state.gd" id="2_ajhja"]
-[ext_resource type="Script" path="res://src/camera_calibration_state.gd" id="3_ajhja"]
-[ext_resource type="Script" path="res://src/calibration_data.gd" id="3_x2ea2"]
+[ext_resource type="Script" uid="uid://cr2sj0fubwuwv" path="res://src/cue_entry.gd" id="1_ajhja"]
+[ext_resource type="Script" uid="uid://wp68xygvemfh" path="res://src/eye_actor_calibration_state.gd" id="2_x2ea2"]
+[ext_resource type="Script" uid="uid://d0322mi3g5g18" path="res://src/camera_calibration_state.gd" id="3_qyxgj"]
+[ext_resource type="Script" uid="uid://bmwcaytks2odl" path="res://src/calibration_data.gd" id="4_jni1g"]
 
 [sub_resource type="Resource" id="Resource_ajhja"]
-script = ExtResource("2_ajhja")
-position = Vector3(-2.1147628, 4.6942887, 0)
-rotation_degrees = Vector3(90, 0, 0)
-scale = Vector3(0.49, 0.49, 0.49)
+script = ExtResource("2_x2ea2")
+position = Vector3(-2.091146, 5.075309, 0)
+rotation_degrees = Vector3(84.52195, -90.00001, -90.00001)
+scale = Vector3(0.36, 0.36, 0.36)
 
 [sub_resource type="Resource" id="Resource_x2ea2"]
-script = ExtResource("1_pumtd")
+script = ExtResource("1_ajhja")
 entity_ids = Array[String](["EyeActor1"])
 state = SubResource("Resource_ajhja")
 
 [sub_resource type="Resource" id="Resource_qyxgj"]
-script = ExtResource("2_ajhja")
-position = Vector3(-0.0014024973, 4.718276, 0)
-rotation_degrees = Vector3(90, 0, 0)
-scale = Vector3(0.49, 0.49, 0.49)
+script = ExtResource("2_x2ea2")
+position = Vector3(-1.5553741, 4.5655622, 0)
+rotation_degrees = Vector3(87.06501, -90.00003, -90.00003)
+scale = Vector3(0.41, 0.41, 0.41)
 
 [sub_resource type="Resource" id="Resource_jni1g"]
-script = ExtResource("1_pumtd")
+script = ExtResource("1_ajhja")
 entity_ids = Array[String](["EyeActor7"])
 state = SubResource("Resource_qyxgj")
 
 [sub_resource type="Resource" id="Resource_hs62j"]
-script = ExtResource("2_ajhja")
-position = Vector3(0.16632283, 4.211857, 0)
-rotation_degrees = Vector3(90, 0, 0)
-scale = Vector3(0.49, 0.49, 0.49)
+script = ExtResource("2_x2ea2")
+position = Vector3(0.019900203, 5.074656, 0)
+rotation_degrees = Vector3(86.2749, -90.000015, -90.000015)
+scale = Vector3(0.40999997, 0.41, 0.40999997)
 
 [sub_resource type="Resource" id="Resource_58h81"]
-script = ExtResource("1_pumtd")
+script = ExtResource("1_ajhja")
 entity_ids = Array[String](["EyeActor9"])
 state = SubResource("Resource_hs62j")
 
 [sub_resource type="Resource" id="Resource_m14jr"]
-script = ExtResource("2_ajhja")
-position = Vector3(-0.06392415, 3.6813345, 0)
-rotation_degrees = Vector3(90, 0, 0)
-scale = Vector3(0.49, 0.49, 0.49)
+script = ExtResource("2_x2ea2")
+position = Vector3(1.9671029, 4.690558, 0)
+rotation_degrees = Vector3(84.25293, 90.00001, 90.00001)
+scale = Vector3(0.49000013, 0.49, 0.49000013)
 
 [sub_resource type="Resource" id="Resource_wgitw"]
-script = ExtResource("1_pumtd")
+script = ExtResource("1_ajhja")
 entity_ids = Array[String](["EyeActor8"])
 state = SubResource("Resource_m14jr")
 
 [sub_resource type="Resource" id="Resource_tnmc5"]
-script = ExtResource("2_ajhja")
-position = Vector3(1.8605518, 4.5765567, 0)
+script = ExtResource("2_x2ea2")
+position = Vector3(-0.099625826, 4.650562, 0)
 rotation_degrees = Vector3(90, 0, 0)
-scale = Vector3(0.49, 0.49, 0.49)
+scale = Vector3(0.41, 0.41, 0.41)
 
 [sub_resource type="Resource" id="Resource_nd002"]
-script = ExtResource("1_pumtd")
+script = ExtResource("1_ajhja")
 entity_ids = Array[String](["EyeActor2"])
 state = SubResource("Resource_tnmc5")
 
 [sub_resource type="Resource" id="Resource_rfilk"]
-script = ExtResource("2_ajhja")
-position = Vector3(-1.7680497, 4.28411, 0)
-rotation_degrees = Vector3(82.30695, 90.00001, 90.00001)
-scale = Vector3(0.49, 0.49, 0.49)
+script = ExtResource("2_x2ea2")
+position = Vector3(0.19232106, 4.1311755, 0)
+rotation_degrees = Vector3(90, 0, 0)
+scale = Vector3(0.4, 0.4, 0.4)
 
 [sub_resource type="Resource" id="Resource_bbhr1"]
-script = ExtResource("1_pumtd")
-entity_ids = Array[String](["EyeActor3"])
+script = ExtResource("1_ajhja")
+entity_ids = Array[String](["EyeActor4"])
 state = SubResource("Resource_rfilk")
 
 [sub_resource type="Resource" id="Resource_ycyhf"]
-script = ExtResource("2_ajhja")
-position = Vector3(1.9257789, 3.9013011, 0)
+script = ExtResource("2_x2ea2")
+position = Vector3(1.88094, 5.335804, 0)
 rotation_degrees = Vector3(90, 0, 0)
-scale = Vector3(0.49, 0.49, 0.49)
+scale = Vector3(0.58, 0.58, 0.58)
 
 [sub_resource type="Resource" id="Resource_j7d58"]
-script = ExtResource("1_pumtd")
-entity_ids = Array[String](["EyeActor4"])
+script = ExtResource("1_ajhja")
+entity_ids = Array[String](["EyeActor5"])
 state = SubResource("Resource_ycyhf")
 
 [sub_resource type="Resource" id="Resource_8qggh"]
-script = ExtResource("2_ajhja")
-position = Vector3(1.8526006, 3.2732813, 0)
-rotation_degrees = Vector3(90, 0, 0)
-scale = Vector3(0.49, 0.49, 0.49)
+script = ExtResource("2_x2ea2")
+position = Vector3(-1.6107985, 5.4366837, 0)
+rotation_degrees = Vector3(89.344185, -90.000206, -90.000206)
+scale = Vector3(0.405, 0.405, 0.405)
 
 [sub_resource type="Resource" id="Resource_c6urc"]
-script = ExtResource("1_pumtd")
-entity_ids = Array[String](["EyeActor5"])
+script = ExtResource("1_ajhja")
+entity_ids = Array[String](["EyeActor6"])
 state = SubResource("Resource_8qggh")
 
 [sub_resource type="Resource" id="Resource_umqsk"]
-script = ExtResource("2_ajhja")
-position = Vector3(2.03088, 2.8545961, 0)
-rotation_degrees = Vector3(90, 0, 0)
+script = ExtResource("2_x2ea2")
+position = Vector3(1.7454439, 4.1743894, 0)
+rotation_degrees = Vector3(85.957016, -90.000015, -90.000015)
 scale = Vector3(0.49, 0.49, 0.49)
 
 [sub_resource type="Resource" id="Resource_gf0qi"]
-script = ExtResource("1_pumtd")
-entity_ids = Array[String](["EyeActor6"])
+script = ExtResource("1_ajhja")
+entity_ids = Array[String](["EyeActor10"])
 state = SubResource("Resource_umqsk")
 
 [sub_resource type="Resource" id="Resource_la6ww"]
-script = ExtResource("2_ajhja")
-position = Vector3(0.030878454, 3.0990405, 0)
-rotation_degrees = Vector3(90, 0, 0)
-scale = Vector3(0.49, 0.49, 0.49)
+script = ExtResource("2_x2ea2")
+position = Vector3(-0.25593555, 5.4357605, 0)
+rotation_degrees = Vector3(87.15896, 90.00003, 90.00003)
+scale = Vector3(0.41000003, 0.41, 0.41000003)
 
 [sub_resource type="Resource" id="Resource_xolkb"]
-script = ExtResource("1_pumtd")
-entity_ids = Array[String](["EyeActor10"])
+script = ExtResource("1_ajhja")
+entity_ids = Array[String](["EyeActor12"])
 state = SubResource("Resource_la6ww")
 
 [sub_resource type="Resource" id="Resource_r3qu0"]
-script = ExtResource("2_ajhja")
-position = Vector3(-1.463844, 3.7564719, 0)
-rotation_degrees = Vector3(82.409966, -90.00001, -90.00001)
-scale = Vector3(0.49000007, 0.49, 0.49000007)
-
-[sub_resource type="Resource" id="Resource_tcdvb"]
-script = ExtResource("1_pumtd")
-entity_ids = Array[String](["EyeActor11"])
-state = SubResource("Resource_r3qu0")
-
-[sub_resource type="Resource" id="Resource_ftno1"]
-script = ExtResource("2_ajhja")
-position = Vector3(-2.022457, 3.245708, 0)
-rotation_degrees = Vector3(90, 0, 0)
-scale = Vector3(0.49, 0.49, 0.49)
-
-[sub_resource type="Resource" id="Resource_fv0jm"]
-script = ExtResource("1_pumtd")
-entity_ids = Array[String](["EyeActor12"])
-state = SubResource("Resource_ftno1")
-
-[sub_resource type="Resource" id="Resource_gs5do"]
-script = ExtResource("2_ajhja")
-position = Vector3(-1.8697802, 2.7331204, 0)
-rotation_degrees = Vector3(90, 0, 0)
-scale = Vector3(0.49, 0.49, 0.49)
-
-[sub_resource type="Resource" id="Resource_0v6s0"]
-script = ExtResource("1_pumtd")
-entity_ids = Array[String](["EyeActor13"])
-state = SubResource("Resource_gs5do")
-
-[sub_resource type="Resource" id="Resource_kogav"]
-script = ExtResource("3_ajhja")
+script = ExtResource("3_qyxgj")
 position = Vector3(0, 3.2255845, 0.1)
 size = 4.9396467
 
-[sub_resource type="Resource" id="Resource_28dts"]
-script = ExtResource("1_pumtd")
+[sub_resource type="Resource" id="Resource_tcdvb"]
+script = ExtResource("1_ajhja")
 entity_ids = Array[String](["ui_camera"])
-state = SubResource("Resource_kogav")
+state = SubResource("Resource_r3qu0")
 
-[sub_resource type="Resource" id="Resource_35wxv"]
-script = ExtResource("3_ajhja")
-position = Vector3(0, 3.6668906, 0.1)
+[sub_resource type="Resource" id="Resource_ftno1"]
+script = ExtResource("3_qyxgj")
+position = Vector3(0, 4.207, 0.1)
 size = 2.9247193
 
-[sub_resource type="Resource" id="Resource_1y3yu"]
-script = ExtResource("1_pumtd")
+[sub_resource type="Resource" id="Resource_fv0jm"]
+script = ExtResource("1_ajhja")
 entity_ids = Array[String](["projection_camera"])
-state = SubResource("Resource_35wxv")
+state = SubResource("Resource_ftno1")
 
 [resource]
-script = ExtResource("3_x2ea2")
-entries = Array[ExtResource("1_pumtd")]([SubResource("Resource_x2ea2"), SubResource("Resource_jni1g"), SubResource("Resource_58h81"), SubResource("Resource_wgitw"), SubResource("Resource_nd002"), SubResource("Resource_bbhr1"), SubResource("Resource_j7d58"), SubResource("Resource_c6urc"), SubResource("Resource_gf0qi"), SubResource("Resource_xolkb"), SubResource("Resource_tcdvb"), SubResource("Resource_fv0jm"), SubResource("Resource_0v6s0"), SubResource("Resource_28dts"), SubResource("Resource_1y3yu")])
+script = ExtResource("4_jni1g")
+entries = Array[ExtResource("1_ajhja")]([SubResource("Resource_x2ea2"), SubResource("Resource_jni1g"), SubResource("Resource_58h81"), SubResource("Resource_wgitw"), SubResource("Resource_nd002"), SubResource("Resource_bbhr1"), SubResource("Resource_j7d58"), SubResource("Resource_c6urc"), SubResource("Resource_gf0qi"), SubResource("Resource_xolkb"), SubResource("Resource_tcdvb"), SubResource("Resource_fv0jm")])

@@ -21,7 +21,7 @@ uniform float scratch_speed : hint_range(0.0, 50.0) = 18.0;
 
 // --- Film Gate Weave/Shake ---
 uniform float weave_amount : hint_range(0.0, 0.05) = 0.002; // Lowered: high weave at 4K causes motion sickness
-uniform float weave_speed : hint_range(0.0, 10.0) = 1.5;
+uniform float weave_speed : hint_range(0.0, 100.0) = 1.5;
 
 // --- Vertical Exposure Bleed (film halation) ---
 uniform bool enable_bloom = true;
@@ -54,8 +54,8 @@ float noise(vec2 uv) {
 void fragment() {
     // 1. Gate Weave (Subtle UV displacement)
     vec2 weave = vec2(
-        sin(TIME * weave_speed) * weave_amount,
-        cos(TIME * weave_speed * 1.2) * weave_amount
+        sin(TIME * weave_speed) * weave_amount * 0.1,
+        cos(TIME * weave_speed * 1.2) * weave_amount * 0.1
     );
     vec2 uv = SCREEN_UV + weave;
 
