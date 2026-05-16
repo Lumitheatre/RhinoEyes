@@ -1,15 +1,15 @@
-[gd_resource type="Resource" script_class="CalibrationData" format=3 uid="uid://dm4p3jusyadoq"]
+[gd_resource type="Resource" script_class="CalibrationData" format=3]
 
-[ext_resource type="Script" uid="uid://cr2sj0fubwuwv" path="res://src/cue_entry.gd" id="1_ajhja"]
-[ext_resource type="Script" uid="uid://wp68xygvemfh" path="res://src/eye_actor_calibration_state.gd" id="2_x2ea2"]
-[ext_resource type="Script" uid="uid://d0322mi3g5g18" path="res://src/camera_calibration_state.gd" id="3_qyxgj"]
-[ext_resource type="Script" uid="uid://bmwcaytks2odl" path="res://src/calibration_data.gd" id="4_jni1g"]
+[ext_resource type="Script" path="res://src/cue_entry.gd" id="1_ajhja"]
+[ext_resource type="Script" path="res://src/eye_actor_calibration_state.gd" id="2_x2ea2"]
+[ext_resource type="Script" path="res://src/camera_calibration_state.gd" id="3_qyxgj"]
+[ext_resource type="Script" path="res://src/calibration_data.gd" id="4_jni1g"]
 
 [sub_resource type="Resource" id="Resource_ajhja"]
 script = ExtResource("2_x2ea2")
-position = Vector3(-2.091146, 5.075309, 0)
+position = Vector3(-2.0621688, 4.793816, 0)
 rotation_degrees = Vector3(84.52195, -90.00001, -90.00001)
-scale = Vector3(0.36, 0.36, 0.36)
+scale = Vector3(0.465, 0.465, 0.465)
 
 [sub_resource type="Resource" id="Resource_x2ea2"]
 script = ExtResource("1_ajhja")
@@ -18,9 +18,9 @@ state = SubResource("Resource_ajhja")
 
 [sub_resource type="Resource" id="Resource_qyxgj"]
 script = ExtResource("2_x2ea2")
-position = Vector3(-1.5553741, 4.5655622, 0)
-rotation_degrees = Vector3(87.06501, -90.00003, -90.00003)
-scale = Vector3(0.41, 0.41, 0.41)
+position = Vector3(-1.7671432, 4.0315547, 0)
+rotation_degrees = Vector3(87.06495, -90.00003, -90.00003)
+scale = Vector3(0.515, 0.515, 0.515)
 
 [sub_resource type="Resource" id="Resource_jni1g"]
 script = ExtResource("1_ajhja")
@@ -29,9 +29,9 @@ state = SubResource("Resource_qyxgj")
 
 [sub_resource type="Resource" id="Resource_hs62j"]
 script = ExtResource("2_x2ea2")
-position = Vector3(0.019900203, 5.074656, 0)
-rotation_degrees = Vector3(86.2749, -90.000015, -90.000015)
-scale = Vector3(0.40999997, 0.41, 0.40999997)
+position = Vector3(-0.004937291, 4.8014426, 0)
+rotation_degrees = Vector3(86.27495, -90.000015, -90.000015)
+scale = Vector3(0.51, 0.51, 0.51)
 
 [sub_resource type="Resource" id="Resource_58h81"]
 script = ExtResource("1_ajhja")
@@ -40,9 +40,9 @@ state = SubResource("Resource_hs62j")
 
 [sub_resource type="Resource" id="Resource_m14jr"]
 script = ExtResource("2_x2ea2")
-position = Vector3(1.9671029, 4.690558, 0)
+position = Vector3(1.9132881, 4.6988373, 0)
 rotation_degrees = Vector3(84.25293, 90.00001, 90.00001)
-scale = Vector3(0.49000013, 0.49, 0.49000013)
+scale = Vector3(0.545, 0.545, 0.545)
 
 [sub_resource type="Resource" id="Resource_wgitw"]
 script = ExtResource("1_ajhja")
@@ -51,9 +51,9 @@ state = SubResource("Resource_m14jr")
 
 [sub_resource type="Resource" id="Resource_tnmc5"]
 script = ExtResource("2_x2ea2")
-position = Vector3(-0.099625826, 4.650562, 0)
+position = Vector3(0.28535676, 4.26144, 0)
 rotation_degrees = Vector3(90, 0, 0)
-scale = Vector3(0.41, 0.41, 0.41)
+scale = Vector3(0.465, 0.465, 0.465)
 
 [sub_resource type="Resource" id="Resource_nd002"]
 script = ExtResource("1_ajhja")
@@ -62,9 +62,9 @@ state = SubResource("Resource_tnmc5")
 
 [sub_resource type="Resource" id="Resource_rfilk"]
 script = ExtResource("2_x2ea2")
-position = Vector3(0.19232106, 4.1311755, 0)
+position = Vector3(-0.11400914, 3.7047973, 0)
 rotation_degrees = Vector3(90, 0, 0)
-scale = Vector3(0.4, 0.4, 0.4)
+scale = Vector3(0.465, 0.465, 0.465)
 
 [sub_resource type="Resource" id="Resource_bbhr1"]
 script = ExtResource("1_ajhja")
@@ -73,7 +73,7 @@ state = SubResource("Resource_rfilk")
 
 [sub_resource type="Resource" id="Resource_ycyhf"]
 script = ExtResource("2_x2ea2")
-position = Vector3(1.88094, 5.335804, 0)
+position = Vector3(1.7691708, 5.3399434, 0)
 rotation_degrees = Vector3(90, 0, 0)
 scale = Vector3(0.58, 0.58, 0.58)
 
@@ -84,9 +84,9 @@ state = SubResource("Resource_ycyhf")
 
 [sub_resource type="Resource" id="Resource_8qggh"]
 script = ExtResource("2_x2ea2")
-position = Vector3(-1.6107985, 5.4366837, 0)
+position = Vector3(-1.6666335, 5.413913, 0)
 rotation_degrees = Vector3(89.344185, -90.000206, -90.000206)
-scale = Vector3(0.405, 0.405, 0.405)
+scale = Vector3(0.495, 0.495, 0.495)
 
 [sub_resource type="Resource" id="Resource_c6urc"]
 script = ExtResource("1_ajhja")
@@ -95,9 +95,9 @@ state = SubResource("Resource_8qggh")
 
 [sub_resource type="Resource" id="Resource_umqsk"]
 script = ExtResource("2_x2ea2")
-position = Vector3(1.7454439, 4.1743894, 0)
+position = Vector3(1.7247463, 3.921874, 0)
 rotation_degrees = Vector3(85.957016, -90.000015, -90.000015)
-scale = Vector3(0.49, 0.49, 0.49)
+scale = Vector3(0.53, 0.53, 0.53)
 
 [sub_resource type="Resource" id="Resource_gf0qi"]
 script = ExtResource("1_ajhja")
@@ -106,9 +106,9 @@ state = SubResource("Resource_umqsk")
 
 [sub_resource type="Resource" id="Resource_la6ww"]
 script = ExtResource("2_x2ea2")
-position = Vector3(-0.25593555, 5.4357605, 0)
+position = Vector3(-0.21039975, 5.4067836, 0)
 rotation_degrees = Vector3(87.15896, 90.00003, 90.00003)
-scale = Vector3(0.41000003, 0.41, 0.41000003)
+scale = Vector3(0.485, 0.485, 0.485)
 
 [sub_resource type="Resource" id="Resource_xolkb"]
 script = ExtResource("1_ajhja")

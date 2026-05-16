@@ -6,7 +6,7 @@
 shader = ExtResource("1_wjahm")
 shader_parameter/desaturation = 0.0
 shader_parameter/sepia_amount = 0.0
-shader_parameter/sepia_color = Color(1, 0.95, 0.7, 1)
+shader_parameter/sepia_color = Color(0.9518048, 0.564778, 2.6953221e-05, 1)
 shader_parameter/grain_amount = 0.010000000475
 shader_parameter/grain_scale = 2.55700011819762
 shader_parameter/grain_speed = 2.6270001247825
