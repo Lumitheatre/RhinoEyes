@@ -5,16 +5,16 @@
 [resource]
 shader = ExtResource("1_wjahm")
 shader_parameter/desaturation = 0.0
-shader_parameter/sepia_amount = 0.0
+shader_parameter/sepia_amount = 0.50000002375
 shader_parameter/sepia_color = Color(0.9518048, 0.564778, 2.6953221e-05, 1)
-shader_parameter/grain_amount = 0.010000000475
+shader_parameter/grain_amount = 0.0470000022325
 shader_parameter/grain_scale = 2.55700011819762
 shader_parameter/grain_speed = 2.6270001247825
 shader_parameter/enable_scratches = true
-shader_parameter/scratch_amount = 0.03200000152
+shader_parameter/scratch_amount = 0.15200000722
 shader_parameter/scratch_density = 0.6950000330125
 shader_parameter/scratch_speed = 16.89600080256
-shader_parameter/weave_amount = 0.0010000000475
+shader_parameter/weave_amount = 0.002000000095
 shader_parameter/weave_speed = 100.0
 shader_parameter/enable_bloom = true
 shader_parameter/bloom_strength = 0.5350000254125
