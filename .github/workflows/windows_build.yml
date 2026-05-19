@@ -1,0 +1,56 @@
+name: Windows CI Build
+
+on:
+    push:
+        branches:
+            - "**"
+
+jobs:
+    build-and-release:
+        name: Build and Release Windows
+        runs-on: ubuntu-latest
+        permissions:
+            contents: write
+
+        steps:
+            - name: Checkout code
+              uses: actions/checkout@v4
+
+            - name: Download and Install Godot
+              env:
+                  GODOT_VERSION: "4.6.2"
+              run: |
+                  wget https://github.com/godotengine/godot/releases/download/${GODOT_VERSION}-stable/Godot_v${GODOT_VERSION}-stable_linux.x86_64.zip
+                  unzip Godot_v${GODOT_VERSION}-stable_linux.x86_64.zip
+                  sudo mv Godot_v${GODOT_VERSION}-stable_linux.x86_64 /usr/local/bin/godot
+
+                  wget https://github.com/godotengine/godot/releases/download/${GODOT_VERSION}-stable/Godot_v${GODOT_VERSION}-stable_export_templates.tpz
+                  mkdir -p ~/.local/share/godot/export_templates/${GODOT_VERSION}.stable
+                  unzip Godot_v${GODOT_VERSION}-stable_export_templates.tpz
+                  mv templates/* ~/.local/share/godot/export_templates/${GODOT_VERSION}.stable/
+
+            - name: Import Assets
+              run: |
+                  godot --headless --editor --quit || true
+
+            - name: Export Windows Build
+              run: |
+                  mkdir -p build/windows
+                  godot --headless --export-release "Windows Desktop" build/windows/RhinoEyes.exe
+
+            - name: Zip Build
+              run: |
+                  cd build/windows
+                  zip -r ../../RhinoEyes-Windows.zip *
+                  cd ../..
+
+            - name: Update Pre-Alpha Release
+              uses: softprops/action-gh-release@v2
+              with:
+                  tag_name: "ci-pre-alpha"
+                  name: "CI Pre-Alpha Build"
+                  body: "Automated rolling release from the latest commit."
+                  prerelease: true
+                  files: RhinoEyes-Windows.zip
+              env:
+                  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
