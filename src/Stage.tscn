@@ -24,12 +24,12 @@
 render_priority = 0
 shader = ExtResource("3_cel86")
 shader_parameter/video_texture = SubResource("Texture2DRD_cenub")
-shader_parameter/uv_offset = Vector2(0, 0)
+shader_parameter/uv_offset = Vector2(0.625, 0.125)
 shader_parameter/uv_scale = Vector2(0.0625, 0.0625)
 shader_parameter/tile_aspect_ratio = 1.7777777777777777
-shader_parameter/uv_offset_new = Vector2(0, 0)
-shader_parameter/uv_offset_old = Vector2(0, 0)
-shader_parameter/blend = 0.0
+shader_parameter/uv_offset_new = Vector2(0.625, 0.125)
+shader_parameter/uv_offset_old = Vector2(0.625, 0.125)
+shader_parameter/blend = 1.0
 shader_parameter/smear_amount = 0.0
 shader_parameter/exposure = 1.1
 shader_parameter/contrast = 1.78
@@ -43,17 +43,15 @@ shader_parameter/flicker_seed = 43758.5453
 
 [sub_resource type="PlaneMesh" id="PlaneMesh_hrmib"]
 
-[sub_resource type="Texture2DRD" id="Texture2DRD_7k5a8"]
-
-[sub_resource type="ShaderMaterial" id="ShaderMaterial_8ruf2"]
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_7k5a8"]
 render_priority = 0
 shader = ExtResource("3_cel86")
-shader_parameter/video_texture = SubResource("Texture2DRD_7k5a8")
-shader_parameter/uv_offset = Vector2(0, 0.1875)
+shader_parameter/video_texture = SubResource("Texture2DRD_cenub")
+shader_parameter/uv_offset = Vector2(0, 0.9375)
 shader_parameter/uv_scale = Vector2(0.0625, 0.0625)
 shader_parameter/tile_aspect_ratio = 1.7777777777777777
-shader_parameter/uv_offset_new = Vector2(0, 0.1875)
-shader_parameter/uv_offset_old = Vector2(0, 0.1875)
+shader_parameter/uv_offset_new = Vector2(0, 0.9375)
+shader_parameter/uv_offset_old = Vector2(0, 0.9375)
 shader_parameter/blend = 1.0
 shader_parameter/smear_amount = 0.0
 shader_parameter/exposure = 1.17
@@ -66,7 +64,7 @@ shader_parameter/flicker_frequency = 8.6
 shader_parameter/flicker_amplitude = 0.19
 shader_parameter/flicker_seed = 43758.5453
 
-[sub_resource type="ShaderMaterial" id="ShaderMaterial_2d4lh"]
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_8ruf2"]
 render_priority = 0
 shader = ExtResource("3_cel86")
 shader_parameter/video_texture = SubResource("Texture2DRD_cenub")
@@ -87,10 +85,12 @@ shader_parameter/flicker_frequency = 8.6
 shader_parameter/flicker_amplitude = 0.19
 shader_parameter/flicker_seed = 43758.5453
 
+[sub_resource type="Texture2DRD" id="Texture2DRD_2d4lh"]
+
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_8kp3n"]
 render_priority = 0
 shader = ExtResource("3_cel86")
-shader_parameter/video_texture = SubResource("Texture2DRD_7k5a8")
+shader_parameter/video_texture = SubResource("Texture2DRD_2d4lh")
 shader_parameter/uv_offset = Vector2(0.375, 0)
 shader_parameter/uv_scale = Vector2(0.0625, 0.0625)
 shader_parameter/tile_aspect_ratio = 1.7777777777777777
@@ -154,10 +154,10 @@ shader_parameter/flicker_seed = 43758.5453
 render_priority = 0
 shader = ExtResource("3_cel86")
 shader_parameter/video_texture = SubResource("Texture2DRD_cenub")
-shader_parameter/uv_offset = Vector2(0.4375, 0.5)
+shader_parameter/uv_offset = Vector2(0.5, 0.5)
 shader_parameter/uv_scale = Vector2(0.0625, 0.0625)
 shader_parameter/tile_aspect_ratio = 1.7777777777777777
-shader_parameter/uv_offset_new = Vector2(0.4375, 0.5)
+shader_parameter/uv_offset_new = Vector2(0.5, 0.5)
 shader_parameter/uv_offset_old = Vector2(0.4375, 0.5)
 shader_parameter/blend = 1.0
 shader_parameter/smear_amount = 0.0
@@ -195,7 +195,7 @@ shader_parameter/flicker_seed = 43758.5453
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_yyj4p"]
 render_priority = 0
 shader = ExtResource("3_cel86")
-shader_parameter/video_texture = SubResource("Texture2DRD_7k5a8")
+shader_parameter/video_texture = SubResource("Texture2DRD_2d4lh")
 shader_parameter/uv_offset = Vector2(0.125, 0.5)
 shader_parameter/uv_scale = Vector2(0.0625, 0.0625)
 shader_parameter/tile_aspect_ratio = 1.7777777777777777
@@ -216,12 +216,12 @@ shader_parameter/flicker_seed = 43758.5453
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_g7x88"]
 render_priority = 0
 shader = ExtResource("3_cel86")
-shader_parameter/video_texture = SubResource("Texture2DRD_7k5a8")
-shader_parameter/uv_offset = Vector2(0.5625, 0.375)
+shader_parameter/video_texture = SubResource("Texture2DRD_2d4lh")
+shader_parameter/uv_offset = Vector2(0.625, 0.25)
 shader_parameter/uv_scale = Vector2(0.0625, 0.0625)
 shader_parameter/tile_aspect_ratio = 1.7777777777777777
-shader_parameter/uv_offset_new = Vector2(0.5625, 0.375)
-shader_parameter/uv_offset_old = Vector2(0.5625, 0.375)
+shader_parameter/uv_offset_new = Vector2(0.625, 0.25)
+shader_parameter/uv_offset_old = Vector2(0.625, 0.25)
 shader_parameter/blend = 1.0
 shader_parameter/smear_amount = 0.0
 shader_parameter/exposure = 1.17
@@ -1128,14 +1128,14 @@ flicker_amplitude = 0.19
 blend_duration = 0.2
 smear_amount = 0.0
 entity_id = "EyeActor1"
-character_name = "Alisa"
-view_angle = 300.0
+character_name = "Dasha"
+view_angle = 303.0
 metadata/_custom_type_script = "uid://brvjdnnvv2hyx"
 
 [node name="Beuf" type="MeshInstance3D" parent="EyeManager" unique_id=824714467]
 transform = Transform3D(0.5143244, -4.3220666e-10, -0.026369963, -0.026369963, -1.6870391e-08, -0.5143244, -4.3220666e-10, 0.515, -1.6870391e-08, -1.7333736, 4.1275887, 0)
 layers = 3
-material_override = SubResource("ShaderMaterial_8ruf2")
+material_override = SubResource("ShaderMaterial_7k5a8")
 mesh = SubResource("PlaneMesh_hrmib")
 script = ExtResource("4_tsohr")
 exposure = 1.17
@@ -1146,14 +1146,14 @@ flicker_amplitude = 0.19
 blend_duration = 0.2
 smear_amount = 0.0
 entity_id = "EyeActor7"
-character_name = "Nadya"
-view_angle = 302.0
+character_name = "Katya"
+view_angle = 305.0
 metadata/_custom_type_script = "uid://brvjdnnvv2hyx"
 
 [node name="Artyom" type="MeshInstance3D" parent="EyeManager" unique_id=800783043]
 transform = Transform3D(0.5089225, -4.3244597e-10, -0.033134375, -0.033134375, -1.3298124e-08, -0.5089225, -4.3244597e-10, 0.51, -1.3298124e-08, 0.16053379, 4.8096757, 0)
 layers = 3
-material_override = SubResource("ShaderMaterial_2d4lh")
+material_override = SubResource("ShaderMaterial_8ruf2")
 mesh = SubResource("PlaneMesh_hrmib")
 script = ExtResource("4_tsohr")
 exposure = 1.35
@@ -1183,7 +1183,7 @@ blend_duration = 0.2
 smear_amount = 0.0
 entity_id = "EyeActor8"
 character_name = "Kostya"
-view_angle = 242.0
+view_angle = 240.0
 metadata/_custom_type_script = "uid://brvjdnnvv2hyx"
 
 [node name="Dina" type="MeshInstance3D" parent="EyeManager" unique_id=64907441]
@@ -1201,7 +1201,7 @@ blend_duration = 0.2
 smear_amount = 0.0
 entity_id = "EyeActor2"
 character_name = "Dina"
-view_angle = 272.0
+view_angle = 273.0
 metadata/_custom_type_script = "uid://brvjdnnvv2hyx"
 
 [node name="Sergey" type="MeshInstance3D" parent="EyeManager" unique_id=1194612402]
@@ -1219,7 +1219,7 @@ blend_duration = 0.2
 smear_amount = 0.0
 entity_id = "EyeActor4"
 character_name = "Sergey"
-view_angle = 228.0
+view_angle = 225.0
 aggravation = 3
 metadata/_custom_type_script = "uid://brvjdnnvv2hyx"
 
@@ -1238,7 +1238,7 @@ blend_duration = 0.2
 smear_amount = 0.0
 entity_id = "EyeActor5"
 character_name = "Dyadya Vova"
-view_angle = 243.0
+view_angle = 242.0
 metadata/_custom_type_script = "uid://brvjdnnvv2hyx"
 
 [node name="Vitaliy" type="MeshInstance3D" parent="EyeManager" unique_id=924590995]
@@ -1256,7 +1256,7 @@ blend_duration = 0.2
 smear_amount = 0.0
 entity_id = "EyeActor6"
 character_name = "Vitaliy"
-view_angle = 293.0
+view_angle = 294.0
 metadata/_custom_type_script = "uid://brvjdnnvv2hyx"
 
 [node name="Zhenya" type="MeshInstance3D" parent="EyeManager" unique_id=1531924818]
@@ -1274,7 +1274,7 @@ blend_duration = 0.2
 smear_amount = 0.0
 entity_id = "EyeActor10"
 character_name = "Zhenya"
-view_angle = 234.0
+view_angle = 232.0
 metadata/_custom_type_script = "uid://brvjdnnvv2hyx"
 
 [node name="Hozayka" type="MeshInstance3D" parent="EyeManager" unique_id=867975701]
@@ -1291,12 +1291,12 @@ flicker_amplitude = 0.19
 blend_duration = 0.2
 smear_amount = 0.0
 entity_id = "EyeActor12"
-character_name = "Sasha"
+character_name = "Oksana"
 view_angle = 273.0
 metadata/_custom_type_script = "uid://brvjdnnvv2hyx"
 
 [node name="Target" type="Node3D" parent="EyeManager" unique_id=507729988]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.021467209, 1.3570987, 0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.011377811, 1.6198592, 0)
 script = ExtResource("6_enulu")
 action_move_sensitivity = 1.0
 acceleration = 3.0
